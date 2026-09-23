@@ -1,0 +1,25 @@
+{
+  "name": "Foundry",
+  "short_name": "Foundry",
+  "description": "Your workshop to forge games, sites, and apps — in the right order.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f0e0c",
+  "theme_color": "#0f0e0c",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

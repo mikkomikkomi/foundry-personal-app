@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f0e0c" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="description" content="Foundry — a personal workshop to learn web, games, mobile, and design in the right order." />
+<title>Foundry</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="Foundry" />
+<meta name="mobile-web-app-capable" content="yes" />
+<style>
+:root {
+  --bg: #0f0e0c;
+  --bg-2: #171614;
+  --bg-3: #1f1d1a;
+  --bg-4: #2a2722;
+  --line: rgba(240, 220, 180, 0.12);
+  --line-2: rgba(240, 220, 180, 0.22);
+  --gold: #e4b34a;
+  --gold-2: #f3d78a;
+  --gold-dim: rgba(228, 179, 74, 0.14);
+  --copper: #c17a4a;
+  --text: #f0ead8;
+  --text-2: #b7b09a;
+  --text-3: #7c776a;
+  --green: #8fb57a;
+  --green-dim: rgba(143, 181, 122, 0.14);
+  --red: #d17a64;
+  --blue: #7aa0c2;
+  --purple: #b59ad6;
+  --radius: 16px;
+  --nav-h: 62px;
+  --font: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", Georgia, serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  --shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  opacity: .035;
+  z-index: 0;
+}
+a { color: var(--gold); text-decoration: none; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+img, svg { max-width: 100%; display: block; }
+code, pre, kbd { font-family: var(--mono); }
+.hidden { display: none !important; }
+
+#app { position: relative; z-index: 1; min-height: 100%; }
+
+/* Shell */
+.shell { min-height: 100%; }
+@media (min-width: 960px) {
+  .shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100%; }
+}
+.side {
+  display: none;
+  background: var(--bg-2);
+  border-right: 1px solid var(--line);
+  padding: 28px 18px;
+  position: sticky; top: 0; height: 100vh;
+  flex-direction: column;
+}
+@media (min-width: 960px) { .side { display: flex; } }
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; padding: 0 8px; }
+.mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(160deg, #2a2418, #161410);
+  border: 1px solid var(--line-2);
+  display: grid; place-items: center;
+  font-family: var(--serif); font-size: 22px; color: var(--gold);
+  box-shadow: inset 0 1px 0 rgba(255,220,140,.15);
+}
+.brand-name { font-family: var(--serif); font-size: 22px; letter-spacing: .02em; line-height: 1; }
+.brand-sub { font-size: 11px; color: var(--text-3); letter-spacing: .14em; text-transform: uppercase; margin-top: 3px; }
+.sidenav { display: flex; flex-direction: column; gap: 4px; }
+.sidenav a, .bnav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  color: var(--text-2); font-size: 14px;
+  border: 1px solid transparent;
+}
+.sidenav a:hover { background: var(--bg-3); color: var(--text); }
+.sidenav a.active, .bnav a.active {
+  background: var(--gold-dim); color: var(--gold-2);
+  border-color: rgba(228,179,74,.25);
+}
+.side-foot { margin-top: auto; padding: 12px 8px 0; }
+.streak-mini { font-size: 12px; color: var(--text-3); }
+.streak-mini b { color: var(--gold); font-weight: 650; }
+
+.main {
+  min-height: 100%;
+  padding: 22px 18px calc(var(--nav-h) + 28px);
+  max-width: 920px;
+}
+@media (min-width: 960px) {
+  .main { padding: 36px 48px 80px; max-width: 980px; }
+}
+
+.bnav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(15,14,12,.92);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(5, 1fr);
+}
+@media (min-width: 960px) { .bnav { display: none; } }
+.bnav a {
+  flex-direction: column; gap: 3px; justify-content: center;
+  font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-3); padding: 8px 4px 6px; border-radius: 0;
+}
+.bnav a svg { width: 20px; height: 20px; }
+.bnav a.active { background: transparent; color: var(--gold); border: 0; }
+
+/* Type */
+.h-kicker {
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 8px;
+}
+h1, .h1 { font-family: var(--serif); font-size: 34px; font-weight: 500; letter-spacing: -.02em; line-height: 1.15; }
+h2, .h2 { font-family: var(--serif); font-size: 24px; font-weight: 500; }
+h3 { font-size: 16px; font-weight: 650; }
+.lede { color: var(--text-2); font-size: 16px; max-width: 54ch; margin-top: 8px; }
+.muted { color: var(--text-3); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.space { height: 22px; }
+.space-lg { height: 36px; }
+
+/* Cards */
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.card.gold {
+  background: linear-gradient(165deg, rgba(228,179,74,.12), rgba(23,22,20,.9));
+  border-color: rgba(228,179,74,.28);
+}
+.grid-2 { display: grid; gap: 12px; }
+@media (min-width: 700px) { .grid-2 { grid-template-columns: 1.4fr 1fr; } }
+.grid-3 { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+.stat { padding: 16px; }
+.stat .n { font-family: var(--serif); font-size: 28px; color: var(--gold-2); }
+.stat .l { font-size: 12px; color: var(--text-3); letter-spacing: .06em; text-transform: uppercase; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--gold); color: #1a1408; font-weight: 650;
+  border: 0; border-radius: 999px; padding: 11px 18px;
+  box-shadow: 0 8px 24px rgba(228,179,74,.18);
+}
+.btn:hover { filter: brightness(1.05); }
+.btn.ghost {
+  background: transparent; color: var(--text); border: 1px solid var(--line-2);
+  box-shadow: none; font-weight: 550;
+}
+.btn.tiny { padding: 7px 12px; font-size: 13px; box-shadow: none; }
+.btn.warn { background: var(--bg-3); color: var(--red); border: 1px solid rgba(209,122,100,.35); box-shadow: none; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Path */
+.phase { position: relative; padding-left: 28px; margin-bottom: 28px; }
+.phase::before {
+  content: ""; position: absolute; left: 7px; top: 28px; bottom: -20px;
+  width: 2px; background: var(--line);
+}
+.phase:last-child::before { display: none; }
+.phase-head { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 12px -28px; }
+.dot {
+  width: 16px; height: 16px; border-radius: 50%; margin-top: 4px; flex: none;
+  border: 2px solid var(--gold-dim); background: var(--bg);
+}
+.dot.done { background: var(--gold); border-color: var(--gold); }
+.dot.now { background: var(--bg); border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-dim); }
+.lesson-list { display: flex; flex-direction: column; gap: 6px; }
+.lesson-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg-2); color: inherit; text-align: left; width: 100%;
+}
+.lesson-row:hover { border-color: var(--line-2); background: var(--bg-3); }
+.lesson-row.done { border-color: rgba(143,181,122,.25); }
+.lesson-row.current { border-color: rgba(228,179,74,.4); background: var(--gold-dim); }
+.check {
+  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--text-3);
+  display: grid; place-items: center; font-size: 12px; color: var(--bg);
+}
+.lesson-row.done .check { background: var(--green); border-color: var(--green); }
+.mins { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
+/* Lesson body */
+.article { max-width: 68ch; }
+.article p, .article ul, .article ol { margin: 12px 0; color: var(--text-2); }
+.article ul, .article ol { padding-left: 1.2em; }
+.article li { margin: 6px 0; }
+.article h3 { margin: 22px 0 8px; font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--text); }
+.article strong { color: var(--text); font-weight: 650; }
+.article code {
+  font-size: .9em; background: var(--bg-3); padding: 1px 6px; border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.article pre {
+  background: #0a0908; border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  padding: 14px 16px; border-radius: 10px; overflow: auto; font-size: 13px;
+  line-height: 1.55; margin: 14px 0; color: #e7e0cc;
+}
+.callout {
+  background: var(--gold-dim); border: 1px solid rgba(228,179,74,.25);
+  border-radius: 12px; padding: 12px 14px; margin: 16px 0; color: var(--text);
+  font-size: 14px;
+}
+.callout.warn { background: rgba(209,122,100,.1); border-color: rgba(209,122,100,.3); }
+.rosetta {
+  display: grid; gap: 8px; margin: 14px 0;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) { .rosetta { grid-template-columns: 1fr 1fr; } }
+.rosetta .cell {
+  background: #0a0908; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+.rosetta h4 {
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 6px; font-weight: 650;
+}
+.rosetta pre { margin: 0; border: 0; padding: 0; background: transparent; border-radius: 0; }
+
+/* Quiz */
+.q-card { padding: 16px; margin: 10px 0; }
+.opt {
+  display: block; width: 100%; text-align: left;
+  background: var(--bg-3); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; margin: 6px 0; color: var(--text-2);
+}
+.opt:hover { border-color: var(--line-2); }
+.opt.good { border-color: var(--green); background: var(--green-dim); color: var(--text); }
+.opt.bad { border-color: var(--red); background: rgba(209,122,100,.1); }
+
+/* Playground */
+.play {
+  display: grid; gap: 10px;
+}
+@media (min-width: 900px) {
+  .play.web { grid-template-columns: 1fr 1fr; align-items: stretch; }
+}
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab {
+  background: var(--bg-3); border: 1px solid var(--line); color: var(--text-2);
+  border-radius: 999px; padding: 7px 12px; font-size: 13px;
+}
+.tab.on { background: var(--gold-dim); color: var(--gold-2); border-color: rgba(228,179,74,.35); }
+.editor {
+  width: 100%; min-height: 160px; background: #0a0908; color: #e7e0cc;
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+  font-family: var(--mono); font-size: 13px; line-height: 1.5; resize: vertical;
+}
+.preview {
+  min-height: 280px; background: white; border-radius: 12px; border: 1px solid var(--line);
+  overflow: hidden;
+}
+.preview iframe { width: 100%; height: 100%; min-height: 280px; border: 0; background: white; }
+.out {
+  background: #0a0908; border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px; font-family: var(--mono); font-size: 12px; white-space: pre-wrap;
+  min-height: 80px; color: #c8c0aa;
+}
+
+/* Review cards */
+.flip {
+  min-height: 220px; display: grid; place-items: center; text-align: center;
+  padding: 28px; cursor: pointer; user-select: none;
+}
+.flip .front { font-family: var(--serif); font-size: 26px; }
+.flip .back { font-size: 18px; color: var(--text-2); }
+
+/* Forms */
+.field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.field label { font-size: 13px; color: var(--text-2); }
+.inp {
+  background: var(--bg-3); border: 1px solid var(--line); border-radius: 10px;
+  padding: 11px 12px; outline: none;
+}
+.inp:focus { border-color: rgba(228,179,74,.5); }
+.choice {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg-2); margin: 8px 0; cursor: pointer; text-align: left; width: 100%;
+  color: inherit;
+}
+.choice.on { border-color: rgba(228,179,74,.45); background: var(--gold-dim); }
+.bar { height: 6px; background: var(--bg-4); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--gold); width: 0; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-2); border: 1px solid var(--line);
+  padding: 4px 8px; border-radius: 99px; background: var(--bg-3);
+}
+.track-web { color: var(--blue); }
+.track-games { color: var(--copper); }
+.track-mobile { color: var(--green); }
+.track-design { color: var(--purple); }
+.track-foundations { color: var(--gold); }
+.track-fullstack { color: var(--gold-2); }
+
+.milestone { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; }
+.milestone input { margin-top: 4px; accent-color: var(--gold); }
+
+.toast {
+  position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%);
+  background: var(--bg-4); border: 1px solid var(--line-2); padding: 10px 16px;
+  border-radius: 999px; z-index: 50; font-size: 14px; box-shadow: var(--shadow);
+}
+@media (min-width: 960px) { .toast { bottom: 24px; } }
+
+.topbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 22px; }
+.search {
+  width: 100%; max-width: 280px;
+}
+
+hr.sep { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="main" style="padding-bottom:48px">
+    <div class="brand" style="margin-bottom:28px">
+      <div class="mark">F</div>
+      <div>
+        <div class="brand-name">Foundry</div>
+        <div class="brand-sub">Learn in order</div>
+      </div>
+    </div>
+    <div class="h-kicker">Your workshop</div>
+    <h1>You do not need more tabs. You need an order.</h1>
+    <p class="lede">A single path through web, games, mobile, and design — HTML, CSS, JavaScript, TypeScript, React, Python, Godot, Figma, and C# in an order that transfers instead of resetting you every week.</p>
+    <div class="callout" style="margin-top:18px">The interactive app (lessons, quizzes, playground, reviews) needs JavaScript. If buttons do nothing here, open this file in Chrome/Safari or use the live preview / local server.</div>
+    <div class="space"></div>
+    <h2>The spine</h2>
+    <p class="muted">Do these in order. Peek ahead if you want; do not rearrange because you are bored.</p>
+    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 00</div>
+      <h2>Foundations</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>How Foundry works</strong> <span class="muted">· 6 min</span></li>
+      <li><strong>Why this order (and not another)</strong> <span class="muted">· 8 min</span></li>
+      <li><strong>How your code actually runs</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>Variables: names for values</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>Decisions and loops</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Functions: named work</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Lists and dictionaries</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Errors are clues, not verdicts</strong> <span class="muted">· 8 min</span></li>
+      <li><strong>Git in one sitting</strong> <span class="muted">· 12 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 01</div>
+      <h2>The web, for real</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>HTML is a tree of meaning</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Semantics, lists, and accessibility</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>Forms collect state</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>CSS: the box model</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Flexbox is one-dimensional layout</strong> <span class="muted">· 14 min</span></li>
+      <li><strong>Grid is two-dimensional layout</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Mobile-first responsive CSS</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Type and color that look grown-up</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>JavaScript meets the DOM</strong> <span class="muted">· 14 min</span></li>
+      <li><strong>Events: the browser talks back</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>Async: fetch and JSON</strong> <span class="muted">· 14 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 02</div>
+      <h2>Design that ships</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>From Figma frame to CSS</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Tokens: color, type, space</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Color systems without guessing</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Components in Figma, components in code</strong> <span class="muted">· 10 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 03</div>
+      <h2>TypeScript & React</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>Modern JavaScript you need for React</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>TypeScript is JavaScript with a proofreader</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>React’s mental model</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Effects, lists, and forms in React</strong> <span class="muted">· 14 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 04</div>
+      <h2>The other half of the stack</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>What a backend is for</strong> <span class="muted">· 8 min</span></li>
+      <li><strong>A tiny Python API</strong> <span class="muted">· 14 min</span></li>
+      <li><strong>SQLite and auth, conceptually</strong> <span class="muted">· 10 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 05</div>
+      <h2>Mobile</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>PWA vs React Native vs Godot mobile</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>Installability and touch</strong> <span class="muted">· 10 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 06</div>
+      <h2>Games in Godot</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>The game loop</strong> <span class="muted">· 10 min</span></li>
+      <li><strong>GDScript for people who know Python</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>Scenes, signals, collisions</strong> <span class="muted">· 12 min</span></li>
+      <li><strong>When C# is worth it</strong> <span class="muted">· 8 min</span></li>
+      </ol>
+    </section>    <section class="phase" style="padding-left:0;margin:22px 0">
+      <div class="h-kicker">Phase 07</div>
+      <h2>Forge them together</h2>
+      <ol class="lesson-list" style="margin-top:10px;padding-left:1.2em;color:var(--text-2)">
+      <li><strong>One maker, three surfaces</strong> <span class="muted">· 8 min</span></li>
+      </ol>
+    </section>
+    <hr class="sep" />
+    <p class="muted">Projects come after each phase: link-in-bio, Figma landing page, browser micro-game, React tracker, Notes API, PWA, Godot collect-game, studio capstone.</p>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  const KEY = "foundry.v1";
+  const $app = document.getElementById("app");
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+
+  const ICONS = {
+    today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5z"/></svg>',
+    path: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="12" r="2.2"/><circle cx="7" cy="19" r="2.2"/><path d="M8 7.5 16 11M16.5 14 8.5 18"/></svg>',
+    practice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 12h5M8 15h6"/></svg>',
+    projects: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h16v11H4zM8 8V6.5A2.5 2.5 0 0 1 10.5 4h3A2.5 2.5 0 0 1 16 6.5V8"/></svg>',
+    you: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5 19.2c.8-3.3 3.4-5.2 7-5.2s6.2 1.9 7 5.2"/></svg>'
+  };
+
+  const PHASES = [
+    { id: "foundations", n: "00", title: "Foundations", blurb: "One set of ideas. Four spellings. Stop relearning the same thing in every language." },
+    { id: "web", n: "01", title: "The web, for real", blurb: "HTML → CSS → JavaScript in the browser. This is the trunk everything else grows from." },
+    { id: "design", n: "02", title: "Design that ships", blurb: "Turn Figma / Affinity instincts into systems you can build. Advanced visual craft, tied to CSS." },
+    { id: "react", n: "03", title: "TypeScript & React", blurb: "The professional frontend stack. Only after JS in the browser feels natural." },
+    { id: "backend", n: "04", title: "The other half of the stack", blurb: "Python APIs, data, auth. Your frontend finally has something to talk to." },
+    { id: "mobile", n: "05", title: "Mobile", blurb: "PWA first (you already have the skills), then React Native, then Godot exports." },
+    { id: "games", n: "06", title: "Games in Godot", blurb: "GDScript will feel like Python. C# waits until you need it. Build one small game end to end." },
+    { id: "capstone", n: "07", title: "Forge them together", blurb: "A site, a game, an app — same person, same taste, same stack of skills." }
+  ];
+
+  const Q = (q, options, a, why) => ({ q, options, a, why });
+  const C = (f, b) => ({ f, b });
+
+  const LESSONS = [
+    {
+      id: "welcome", phase: "foundations", track: "foundations", title: "How Foundry works", mins: 6,
+      why: "You do not have a motivation problem. You have an order problem. This lesson is the contract.",
+      html: `
+        <p>You are learning HTML, CSS, JavaScript, TypeScript, React, Python, C#, Godot, Figma, Canva, Affinity, and DaVinci at once. That is not a plan. That is a buffet.</p>
+        <p>Foundry forces a <strong>spine</strong>: one next lesson. Side tracks exist, but Home will always point at the next incomplete lesson on the spine. If you jump ahead, you will see a warning — not a lock. You are a CS student, not a child. Use the warning.</p>
+        <h3>The order, in one paragraph</h3>
+        <p>Programming ideas (variables, control, functions, data) → HTML/CSS/JS in the browser → design systems that you can implement → TypeScript and React → a Python backend → mobile as a PWA then React Native → Godot, where GDScript reuses your Python brain. C# is a later spelling, not a starting language.</p>
+        <div class="callout">Do one lesson. Answer the quiz. If a lab exists, run it. Then stop or continue. Reviews (spaced repetition) come back automatically — that is how you stop forgetting.</div>
+        <p>Install Foundry to your phone home screen (Profile → Install). Progress lives in this browser. Export a backup from Profile if you switch devices.</p>`,
+      quiz: [
+        Q("What should you do when you feel like switching from CSS to Godot mid-week?", ["Follow Home’s next lesson", "Start a new Unity tutorial", "Rewatch a Figma beginner video", "Learn C# from chapter 1"], 0, "The spine exists so you stop restarting. Curiosity is fine; make it after the day’s lesson."),
+        Q("Why does C# come late here?", ["C# is obsolete", "You already have Python + JS; C# is another spelling of the same ideas", "Godot cannot use C#", "Mobile apps require C#"], 1, "C# matters (Godot, tooling), but learning two syntaxes before you understand functions just doubles the fog.")
+      ],
+      cards: [C("What is the spine?", "The recommended lesson order. Home always offers the next incomplete spine lesson."), C("Where is progress stored?", "In this browser’s localStorage. Export a backup from Profile.")]
+    },
+    {
+      id: "why-order", phase: "foundations", track: "foundations", title: "Why this order (and not another)", mins: 8,
+      why: "Every YouTube roadmap disagrees. Here is a reason, not a vibe.",
+      html: `
+        <p>Roadmaps fail you when they list tools instead of <strong>dependencies</strong>.</p>
+        <ul>
+          <li><strong>React before JavaScript</strong> means you copy hooks you cannot debug.</li>
+          <li><strong>Godot before programming ideas</strong> means the inspector feels like magic, then breaks.</li>
+          <li><strong>Figma without CSS</strong> means you design things you cannot build, then assume you “cannot code.”</li>
+          <li><strong>C# and Python and JS together</strong> means you mix <code>int x = 1</code>, <code>x = 1</code>, and <code>let x = 1</code> and blame your memory.</li>
+        </ul>
+        <h3>Transfer, not talent</h3>
+        <p>Once <em>functions</em> are solid, GDScript functions are a dialect. Once <em>components</em> are solid in React, React Native is a dialect. Once <em>Flexbox</em> is solid, Figma Auto Layout finally has a name in code.</p>
+        <div class="callout">You already have design fundamentals. The advanced gap is usually systems (type scale, color tokens, spacing) plus the nerve to implement them. We teach those in phase 02, after CSS.</div>
+        <p>Games, sites, and mobile are three skins on the same creature: state, input, rendering, data. Learn the creature first.</p>`,
+      quiz: [
+        Q("What is the main cost of learning three languages at once as a beginner?", ["Download size", "You relearn the same ideas with different syntax and think you are bad at coding", "Employers hate polyglots", "Godot forbids it"], 1, "The ideas are shared. Syntax switching early feels like starting over every day."),
+        Q("React Native is taught after React because…", ["Apple requires it", "It reuses the component model you will already have", "It is easier than HTML", "It replaces JavaScript"], 1, "Same mental model, different renderer. That only helps if the model exists.")
+      ],
+      cards: [C("Name one false start this path avoids.", "React before JS, Godot before programming ideas, or C# as a first language."), C("What transfers from Figma Auto Layout to code?", "Flexbox (and wrapping, gaps, alignment).")]
+    },
+    {
+      id: "how-code-runs", phase: "foundations", track: "foundations", title: "How your code actually runs", mins: 10,
+      why: "Blank-page fear often is ‘I don’t know what the machine will do with this file.’",
+      html: `
+        <p>Three runtimes matter for you:</p>
+        <ul>
+          <li><strong>The browser</strong> — loads HTML, applies CSS, runs JavaScript. Your websites and this app live here.</li>
+          <li><strong>CPython</strong> — runs <code>.py</code> files on your machine (and later, a server). Backend, scripts, tools.</li>
+          <li><strong>Godot</strong> — a game engine with a scene tree. GDScript (or C#) runs on nodes every frame.</li>
+        </ul>
+        <h3>A program is data + instructions</h3>
+        <p>The computer keeps values in memory and follows instructions in order, unless you branch or loop. An error is the runtime saying “I cannot do that instruction with this value.” It is not a verdict on you.</p>
+        <div class="callout">When something “does nothing,” ask: did this code even run? Put a <code>console.log</code>, <code>print</code>, or <code>print()</code> in GDScript at the top. Prove the file is alive before you hunt logic bugs.</div>
+        <h3>Files are not apps until something loads them</h3>
+        <p>HTML needs a browser. Python needs <code>python file.py</code> (or Foundry’s lab). A Godot script does nothing until it is attached to a node in a running scene. React components do nothing until they are rendered by React.</p>`,
+      quiz: [
+        Q("You write a GDScript file but the player does not move. First question?", ["Rewrite it in C#", "Did this script run on a node in a playing scene?", "Reinstall Godot", "Convert it to Python"], 1, "Unattached or un-run scripts are the most common ‘Godot is broken’ moment."),
+        Q("console.log is for…", ["Shipping to users", "Proving code ran and inspecting values", "Styling pages", "Compiling TypeScript"], 1, "Print debugging is a professional tool, not a beginner crutch.")
+      ],
+      cards: [C("Name your three runtimes.", "Browser (JS), CPython, Godot."), C("First question when nothing happens?", "Did this code even run?")]
+    },
+    {
+      id: "variables", phase: "foundations", track: "foundations", title: "Variables: names for values", mins: 10,
+      why: "Every language you listed is this idea with different spelling.",
+      html: `
+        <p>A variable is a labeled box. The label is the name. Inside is a value. Assignment puts a value in the box.</p>
+        <div class="rosetta">
+          <div class="cell"><h4>JavaScript</h4><pre>let lives = 3;
+const NAME = "Ava";
+lives = lives - 1;</pre></div>
+          <div class="cell"><h4>Python</h4><pre>lives = 3
+NAME = "Ava"
+lives = lives - 1</pre></div>
+          <div class="cell"><h4>GDScript</h4><pre>var lives := 3
+const NAME := "Ava"
+lives -= 1</pre></div>
+          <div class="cell"><h4>C#</h4><pre>int lives = 3;
+const string Name = "Ava";
+lives -= 1;</pre></div>
+        </div>
+        <p><code>const</code> / C# <code>const</code> means “this name will not point at a new value.” Python has no const; UPPERCASE is a promise, not a lock. GDScript’s <code>:=</code> infers the type.</p>
+        <p>Types you will live with: numbers, strings, booleans, then collections (next lessons). JS is sloppy with types; TypeScript and C# are strict; Python and GDScript sit in between.</p>
+        <div class="callout">Name things by what they mean (<code>playerLives</code>), not what they are (<code>num1</code>). Future you is a stranger.</div>`,
+      quiz: [
+        Q("In JS, which keyword fits a value you will not reassign?", ["var", "let", "const", "static"], 2, "const prevents reassignment. let is for values that change."),
+        Q("Python’s UPPERCASE names are…", ["Enforced constants", "A convention", "A compile error if changed", "Only for classes"], 1, "Python will happily overwrite NAME. Discipline is on you."),
+        Q("GDScript `var lives := 3` does what extra vs `var lives = 3`?", ["Makes it global", "Infers a static type from the value", "Connects a signal", "Exports to the inspector"], 1, ":= is typed inference. Useful as projects grow.")
+      ],
+      cards: [C("let vs const in JS?", "let can be reassigned; const cannot. Both are block-scoped."), C("What is a variable?", "A name bound to a value in memory.")],
+      lab: { type: "js", prompt: "Create let score = 0, add 10, then score should be 10. Use those names.", starter: "let score = 0;\n// add 10 to score\n", tests: "assert(typeof score === 'number', 'score should be a number');\nassert(score === 10, 'score should be 10');" }
+    },
+    {
+      id: "control-flow", phase: "foundations", track: "foundations", title: "Decisions and loops", mins: 12,
+      why: "Games, forms, and APIs are almost entirely ‘if this, then that, again.’",
+      html: `
+        <p>Code runs top to bottom unless you <strong>branch</strong> (<code>if</code>) or <strong>repeat</strong> (<code>for</code> / <code>while</code>).</p>
+        <div class="rosetta">
+          <div class="cell"><h4>JavaScript</h4><pre>if (hits >= 3) {
+  alive = false;
+}
+for (let i = 0; i &lt; 3; i++) {
+  spawn();
+}</pre></div>
+          <div class="cell"><h4>Python</h4><pre>if hits &gt;= 3:
+    alive = False
+for i in range(3):
+    spawn()</pre></div>
+          <div class="cell"><h4>GDScript</h4><pre>if hits &gt;= 3:
+    alive = false
+for i in range(3):
+    spawn()</pre></div>
+          <div class="cell"><h4>C#</h4><pre>if (hits &gt;= 3) {
+    alive = false;
+}
+for (int i = 0; i &lt; 3; i++) {
+    Spawn();
+}</pre></div>
+        </div>
+        <p>Notice GDScript looks like Python on purpose. That is why Godot waits until after you can read Python-shaped code — you already have it on your list.</p>
+        <p>Booleans are comparisons: <code>===</code> in JS (strict), <code>==</code> in Python/GDScript, <code>==</code> in C#. In JS, prefer <code>===</code> so <code>0</code> and <code>""</code> do not surprise you.</p>
+        <div class="callout warn">Infinite loops freeze a tab or a game. If you write <code>while (true)</code>, you must <code>break</code> or change the condition. In Godot, <code>_process</code> already loops for you every frame — do not put a <code>while true</code> there.</div>`,
+      quiz: [
+        Q("Why does Foundry teach Python before deep Godot?", ["Python is faster", "GDScript is Python-shaped, so ideas transfer", "Godot cannot loop", "C# is banned"], 1, "You learn if/for once, then reuse them in the engine."),
+        Q("In JavaScript, which equality should you default to?", ["==", "===", "=", "equals()"], 1, "=== does not coerce types."),
+        Q("A game’s _process already repeats every frame. So you should…", ["Wrap all of it in while(true)", "Let the engine loop; just write per-frame logic", "Use Python instead", "Avoid if statements"], 1, "The engine is the loop.")
+      ],
+      cards: [C("Branch vs loop?", "Branch chooses a path; loop repeats a path."), C("JS: == vs === ?", "=== is strict (no type coercion). Prefer it.")],
+      lab: { type: "js", prompt: "Set let status to 'go' if speed is over 5, else 'stop'. speed is already 8.", starter: "const speed = 8;\nlet status;\n// your if\n", tests: "assert(status === 'go', 'status should be go when speed is 8');" }
+    },
+    {
+      id: "functions", phase: "foundations", track: "foundations", title: "Functions: named work", mins: 12,
+      why: "Components, signals, API routes, and player.jump() are all functions in costume.",
+      html: `
+        <p>A function bundles instructions behind a name. You <strong>call</strong> it, optionally pass <strong>arguments</strong>, and optionally get a <strong>return value</strong>.</p>
+        <div class="rosetta">
+          <div class="cell"><h4>JavaScript</h4><pre>function damage(hp, amount) {
+  return Math.max(0, hp - amount);
+}
+const damage2 = (hp, amount) =>
+  Math.max(0, hp - amount);</pre></div>
+          <div class="cell"><h4>Python</h4><pre>def damage(hp, amount):
+    return max(0, hp - amount)</pre></div>
+          <div class="cell"><h4>GDScript</h4><pre>func damage(hp, amount):
+    return max(0, hp - amount)</pre></div>
+          <div class="cell"><h4>C#</h4><pre>int Damage(int hp, int amount) {
+    return Math.Max(0, hp - amount);
+}</pre></div>
+        </div>
+        <p>Arrow functions in JS are common in React. Same idea: inputs in, value out. Side effects (changing something outside) are allowed but should be obvious.</p>
+        <div class="callout">If a function does more than one job, split it. <code>updateScoreAndSaveAndPlaySound()</code> is how bugs hide.</div>
+        <p>Scope: variables declared inside a function are not visible outside. That is a feature. It keeps the rest of the program from stepping on your toes.</p>`,
+      quiz: [
+        Q("What does return do?", ["Prints to the screen", "Hands a value back to the caller and exits the function", "Restarts the program", "Declares a variable"], 1, "Without return, JS functions return undefined, Python returns None."),
+        Q("React’s onClick={handleClick} is passing…", ["CSS", "A function (to be called later)", "A database", "HTML"], 1, "Callbacks are functions passed as values. You already know this once functions click."),
+        Q("GDScript’s func is closest to…", ["Python def", "CSS class", "HTML div", "SQL SELECT"], 0, "Almost the same shape on purpose.")
+      ],
+      cards: [C("What are arguments?", "Input values you pass into a function when you call it."), C("A callback is…", "A function passed as a value to be called later.")],
+      lab: { type: "js", prompt: "Write function add(a, b) that returns the sum. Then set result = add(2, 3).", starter: "// write add, then call it\nlet result;\n", tests: "assert(typeof add === 'function', 'add should be a function');\nassert(add(10, 5) === 15, 'add(10,5) should be 15');\nassert(result === 5, 'result should be 5');" }
+    },
+    {
+      id: "data-structures", phase: "foundations", track: "foundations", title: "Lists and dictionaries", mins: 12,
+      why: "Leaderboards, inventories, JSON APIs, Figma node trees — all lists and maps.",
+      html: `
+        <p>Two collections cover 90% of app work:</p>
+        <ul>
+          <li><strong>List / array</strong> — ordered values. Index from 0.</li>
+          <li><strong>Dict / object / map</strong> — named fields. Keys to values.</li>
+        </ul>
+        <div class="rosetta">
+          <div class="cell"><h4>JavaScript</h4><pre>const items = ["potion", "key"];
+items.push("map");
+const player = { hp: 10, name: "Ava" };
+player.hp -= 1;</pre></div>
+          <div class="cell"><h4>Python</h4><pre>items = ["potion", "key"]
+items.append("map")
+player = {"hp": 10, "name": "Ava"}
+player["hp"] -= 1</pre></div>
+          <div class="cell"><h4>GDScript</h4><pre>var items = ["potion", "key"]
+items.append("map")
+var player = { "hp": 10, "name": "Ava" }
+player.hp -= 1</pre></div>
+          <div class="cell"><h4>C#</h4><pre>var items = new List&lt;string&gt; { "potion", "key" };
+items.Add("map");
+// class Player { public int Hp; }</pre></div>
+        </div>
+        <p>JSON, which every API speaks, is just lists and objects written as text. When you <code>fetch</code> later, you are pulling this shape over the network.</p>
+        <div class="callout">Off-by-one errors: the last index is <code>length - 1</code>. Empty lists have length 0 — check before you read index 0.</div>`,
+      quiz: [
+        Q("player.hp in JS is the same idea as…", ["A CSS class", "A Python dict key player['hp']", "A Godot scene", "A git branch"], 1, "Named fields. Different punctuation."),
+        Q("JSON is…", ["A database", "Lists and objects as text", "A CSS framework", "A Godot node"], 1, "You will send JSON to your Python API later."),
+        Q("The last index of an array of length 3 is…", ["3", "2", "1", "0"], 1, "Zero-based indexing.")
+      ],
+      cards: [C("Array vs object?", "Array = ordered list. Object/dict = named keys to values."), C("What is JSON?", "A text format for arrays and objects, used by APIs.")],
+      lab: { type: "js", prompt: "Make an array inventory with 'sword' and 'shield'. Push 'potion'. Set count = inventory.length.", starter: "let inventory;\nlet count;\n", tests: "assert(Array.isArray(inventory), 'inventory should be an array');\nassert(inventory.includes('sword') && inventory.includes('shield') && inventory.includes('potion'), 'need sword, shield, potion');\nassert(count === 3, 'count should be 3');" }
+    },
+    {
+      id: "debugging", phase: "foundations", track: "foundations", title: "Errors are clues, not verdicts", mins: 8,
+      why: "Motivation dies on red text. A method turns the red text into a next step.",
+      html: `
+        <p>Read errors from the <strong>bottom message</strong> and the <strong>first file/line that is yours</strong>.</p>
+        <ol>
+          <li><strong>Syntax</strong> — you typed something the language cannot parse. Missing <code>)</code>, bad indent in Python/GDScript.</li>
+          <li><strong>Runtime</strong> — parsed fine, then blew up: <code>undefined.hp</code>, division by zero, node not found.</li>
+          <li><strong>Logic</strong> — runs, but the result is wrong. These need prints and hypotheses, not more tutorials.</li>
+        </ol>
+        <h3>A 4-step loop</h3>
+        <ol>
+          <li>Reproduce it. If it is random, you cannot test a fix.</li>
+          <li>State what you expected vs what you got.</li>
+          <li>Prove the code path with a log at the start of the function.</li>
+          <li>Change one thing. Re-run.</li>
+        </ol>
+        <div class="callout">“Undefined is not a function” in JS almost always means “this name is not the function you think.” Log the value. “Node not found” in Godot means the path is wrong — the scene tree is data, not magic.</div>
+        <p>Setup hell (tooling) is a different beast: copy the exact command and the exact error into a note. Do not reinstall everything as step one.</p>`,
+      quiz: [
+        Q("A program runs but the score never increases. That is…", ["Syntax error", "Logic error", "DNS error", "TypeScript being mean"], 1, "No crash, wrong behavior → logic. Print the score before and after the line that should change it."),
+        Q("Best first move on an error?", ["Delete node_modules always", "Read the message and the line", "Switch language", "Watch a 4-hour video"], 1, "The stack trace is trying to help.")
+      ],
+      cards: [C("Three error kinds?", "Syntax, runtime, logic."), C("First debugging question?", "What did I expect, and what happened instead?")]
+    },
+    {
+      id: "git-basics", phase: "foundations", track: "foundations", title: "Git in one sitting", mins: 12,
+      why: "Without Git, every project feels fragile, so you avoid building.",
+      html: `
+        <p>Git is a timeline of snapshots of your files. GitHub/GitLab are websites that store that timeline.</p>
+        <pre>git init
+git add .
+git commit -m "Start landing page"
+git status</pre>
+        <p><code>add</code> stages. <code>commit</code> freezes a snapshot. Messages should say <em>why</em>, not “update.”</p>
+        <h3>The only other commands you need this month</h3>
+        <pre>git log --oneline
+git diff
+git checkout -b feature/nav
+git branch</pre>
+        <p>Branches are alternate timelines. Merge later. For school projects, <code>main</code> plus short-lived branches is enough.</p>
+        <div class="callout">Commit when something works, even if small. “Add hero section” is a good commit. A week of uncommitted work is how people lose a weekend.</div>
+        <p>Do this outside Foundry: install Git, run <code>git config --global user.name</code> and <code>user.email</code>, make a folder, commit a <code>README.md</code>.</p>`,
+      quiz: [
+        Q("git commit without git add…", ["Commits every file always", "Commits nothing new (unless -a on tracked files)", "Uploads to GitHub", "Deletes history"], 1, "The stage is the list of what goes into the next snapshot."),
+        Q("A branch is…", ["A copy of GitHub", "An alternate timeline of commits", "A CSS layout", "A Python venv"], 1, "Cheap, local, and meant to be merged.")
+      ],
+      cards: [C("add vs commit?", "add stages files; commit records a snapshot."), C("Why commit small?", "Easy undo, clear history, less fear.")],
+      lab: { type: "checklist", prompt: "Do this on your machine, then check them off.", items: ["Install Git and run git --version", "Set user.name and user.email", "Create a folder, git init, add a README, commit"] }
+    },
+    {
+      id: "html-skeleton", phase: "web", track: "web", title: "HTML is a tree of meaning", mins: 12,
+      why: "If the skeleton is wrong, CSS and JS fight you forever.",
+      html: `
+        <p>HTML describes <strong>what things are</strong>, not how they look. The browser turns tags into a tree — the DOM.</p>
+        <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;title&gt;Ava — maker&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;header&gt;&lt;h1&gt;Ava Cruz&lt;/h1&gt;&lt;/header&gt;
+    &lt;main&gt;
+      &lt;p&gt;Games, sites, apps.&lt;/p&gt;
+    &lt;/main&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+        <p>Use <code>h1</code>–<code>h6</code> in order, <code>p</code> for paragraphs, <code>a</code> for links, <code>img</code> with <code>alt</code>, <code>button</code> for actions, <code>nav</code>/<code>main</code>/<code>footer</code> for landmarks.</p>
+        <div class="callout warn">Do not wrap everything in <code>div</code>. Divs have no meaning. Screen readers and your future CSS both suffer.</div>
+        <p>Open this app’s Playground and write a page about you with a heading, a paragraph, and a link. That is lesson one of being a web developer — not React.</p>`,
+      quiz: [
+        Q("Which tag is best for the main page title?", ["div", "span", "h1", "b"], 2, "One h1 per page is a strong default."),
+        Q("alt on images is for…", ["SEO only", "People who cannot see the image, and when it fails to load", "CSS", "Godot"], 1, "Describe the image if it matters; empty alt if decorative."),
+        Q("The DOM is…", ["A database", "The tree of elements the browser builds from HTML", "A Figma plugin", "A Python package"], 1, "JS will later reach into this tree.")
+      ],
+      cards: [C("HTML’s job?", "Meaning and structure, not appearance."), C("Why not only divs?", "They have no semantic meaning for CSS, a11y, or clarity.")],
+      lab: { type: "html", prompt: "Build a tiny profile: h1 with your name, a paragraph, and a link to a site you like.", starterHtml: "<h1>Your name</h1>\n<p>Replace me.</p>\n", starterCss: "body { font-family: Georgia, serif; padding: 24px; background: #111; color: #eee; }", starterJs: "" }
+    },
+    {
+      id: "html-semantics", phase: "web", track: "web", title: "Semantics, lists, and accessibility", mins: 10,
+      why: "Professional HTML is mostly choosing the right tag and labeling controls.",
+      html: `
+        <p>Lists: <code>ul</code> for bullets, <code>ol</code> for order, <code>li</code> for items. Navigation is often <code>nav &gt; ul &gt; li &gt; a</code>.</p>
+        <p>Buttons vs links: if it <strong>goes somewhere</strong>, use <code>a href</code>. If it <strong>does something</strong> on this page, use <code>button</code>. Fake buttons made of divs break keyboards.</p>
+        <pre>&lt;nav aria-label="Primary"&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="#work"&gt;Work&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+&lt;button type="button"&gt;Start&lt;/button&gt;</pre>
+        <p><code>label</code> + <code>input</code> are married with matching <code>for</code>/<code>id</code>. Placeholders are not labels.</p>
+        <div class="callout">Accessibility is not a phase at the end. It is using the platform. You already practice hierarchy in Figma — HTML headings are that hierarchy in the document.</div>`,
+      quiz: [
+        Q("A ‘Buy’ control that submits a form should be…", ["div", "a href=#", "button type=submit", "span"], 2, "Buttons submit; links navigate."),
+        Q("Placeholder text can replace a label.", ["True", "False"], 1, "Placeholders disappear. Labels stay.")
+      ],
+      cards: [C("Link vs button?", "Link = navigate. Button = action."), C("How do you associate a label?", "for= on label matches id= on input.")]
+    },
+    {
+      id: "html-forms", phase: "web", track: "web", title: "Forms collect state", mins: 10,
+      why: "Login, settings, damage calculators, high-score names — all forms.",
+      html: `
+        <p>A form is a set of named controls. On submit, you either send it to a server or handle it with JS.</p>
+        <pre>&lt;form id="join"&gt;
+  &lt;label for="alias"&gt;Alias&lt;/label&gt;
+  &lt;input id="alias" name="alias" required minlength="2" /&gt;
+  &lt;button type="submit"&gt;Enter&lt;/button&gt;
+&lt;/form&gt;</pre>
+        <p>Useful types: <code>text</code>, <code>email</code>, <code>password</code>, <code>number</code>, <code>checkbox</code>, <code>radio</code>, <code>file</code>. <code>required</code>, <code>min</code>, <code>max</code>, <code>pattern</code> give you free validation.</p>
+        <p>In JS you will later <code>preventDefault</code> so the page does not reload, then read <code>new FormData(form)</code>.</p>
+        <div class="callout">Never trust only frontend validation. When we reach Python APIs, we validate again on the server. The browser check is for UX.</div>`,
+      quiz: [
+        Q("Why type=submit on the button?", ["Styles it blue", "Tells the browser this button sends the form", "Required by React", "Disables validation"], 1, "type=button would not submit."),
+        Q("Frontend required is enough for security.", ["Yes", "No"], 1, "Anyone can POST without your page.")
+      ],
+      cards: [C("FormData is…", "A JS object representing the fields in a form."), C("Why validate twice?", "Browser = UX. Server = security.")]
+    },
+    {
+      id: "css-box", phase: "web", track: "web", title: "CSS: the box model", mins: 12,
+      why: "Every layout bug is a box you are not seeing.",
+      html: `
+        <p>Every element is a box: <strong>content</strong> → <strong>padding</strong> → <strong>border</strong> → <strong>margin</strong>.</p>
+        <pre>* { box-sizing: border-box; }
+.card {
+  width: 320px;
+  padding: 16px;
+  border: 1px solid #333;
+  margin: 12px;
+}</pre>
+        <p><code>border-box</code> makes <code>width</code> include padding and border. Set it once globally. This is non-negotiable.</p>
+        <p>Display: <code>block</code> (takes a row), <code>inline</code> (flows with text), <code>inline-block</code>, <code>none</code> (removed), later <code>flex</code> and <code>grid</code>.</p>
+        <p>Selectors: <code>element</code>, <code>.class</code>, <code>#id</code>, <code>parent child</code>, <code>parent &gt; child</code>. Specificity is why “my CSS won’t apply” happens — a more specific rule wins, then <code>!important</code> as a last resort you should almost never use.</p>
+        <div class="callout">In DevTools, box-model diagram is the truth. When Figma says 16 and the page looks wrong, inspect the computed padding, not your feelings.</div>`,
+      quiz: [
+        Q("With border-box, width: 320px and padding: 16px means content is…", ["320", "288 plus padding inside the 320", "352", "16"], 1, "Padding eats into the 320."),
+        Q("Margin is…", ["Inside the border", "Outside the border, pushing other boxes away", "A font", "A Godot node"], 1, "Margin is the gap between boxes.")
+      ],
+      cards: [C("Box model order?", "content → padding → border → margin"), C("Why border-box?", "Width includes padding and border; layouts become predictable.")],
+      lab: { type: "html", prompt: "Make a .card 280px wide, 24px padding, 1px gold border, 16px margin. Put a heading inside.", starterHtml: "<div class='card'><h1>Card</h1><p>Box model practice.</p></div>", starterCss: "body { background: #111; color: #eee; font-family: sans-serif; }\n/* your .card */\n", starterJs: "" }
+    },
+    {
+      id: "css-flex", phase: "web", track: "web", title: "Flexbox is one-dimensional layout", mins: 14,
+      why: "Navbars, toolbars, center-a-thing, Figma Auto Layout — this is the mapping.",
+      html: `
+        <p>A flex container distributes <strong>children along one axis</strong>.</p>
+        <pre>.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}</pre>
+        <ul>
+          <li><code>justify-content</code> — main axis (horizontal if row).</li>
+          <li><code>align-items</code> — cross axis (vertical if row).</li>
+          <li><code>flex-direction: column</code> swaps the axes.</li>
+          <li><code>flex-wrap: wrap</code> allows extra rows.</li>
+          <li><code>flex: 1</code> on a child means “eat leftover space.”</li>
+        </ul>
+        <h3>Figma → CSS</h3>
+        <p>Auto Layout horizontal = <code>display: flex</code>. Padding = padding. Gap = <code>gap</code>. Align = align-items / justify-content. Hug contents ≈ width/height auto. Fill container ≈ <code>flex: 1</code>.</p>
+        <div class="callout">If you already “get” Auto Layout, you already get Flexbox. You were missing the CSS names, not the talent.</div>`,
+      quiz: [
+        Q("To vertically center a single item in a bar, you usually set…", ["text-align: center", "align-items: center on the flex parent", "position: sticky", "float: left"], 1, "Cross-axis alignment."),
+        Q("Figma’s gap in Auto Layout becomes…", ["margin hacks only", "the CSS gap property", "z-index", "alt text"], 1, "Direct mapping.")
+      ],
+      cards: [C("justify-content vs align-items?", "Main axis vs cross axis."), C("Auto Layout horizontal maps to…", "display: flex; flex-direction: row;")],
+      lab: { type: "html", prompt: "Header row: logo on the left, two links on the right, vertically centered, 16px gap.", starterHtml: "<header class='bar'>\n  <strong>Foundry</strong>\n  <nav>\n    <a href='#'>Path</a>\n    <a href='#'>Lab</a>\n  </nav>\n</header>", starterCss: "body { margin: 0; font-family: sans-serif; background: #111; color: #eee; }\na { color: #e4b34a; margin-left: 12px; }\n/* make .bar a flex space-between header */\n", starterJs: "" }
+    },
+    {
+      id: "css-grid", phase: "web", track: "web", title: "Grid is two-dimensional layout", mins: 12,
+      why: "Dashboards, galleries, entire page frames. Flex cannot do 2D as cleanly.",
+      html: `
+        <pre>.page {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}</pre>
+        <p>Use Grid for the <em>page</em> or a <em>2D collection</em>. Use Flex for a row/column of controls. Nest them. This app’s desktop shell is a sidebar + main grid; the bottom nav on mobile is a flex/grid of five.</p>
+        <p><code>minmax(180px, 1fr)</code> + <code>auto-fit</code> is the whole “responsive cards” trick. Learn it once, use it for years.</p>
+        <div class="callout">If you are fighting Flex with nested wrappers to fake columns and rows, stop and switch to Grid.</div>`,
+      quiz: [
+        Q("repeat(auto-fit, minmax(180px, 1fr)) is for…", ["Sticky footers only", "As many columns as fit, each at least 180px", "Print CSS", "Godot tilemaps"], 1, "The classic responsive gallery."),
+        Q("Sidebar + main content is a good job for…", ["Floats", "A 2-column grid", "Multiple h1s", "Canvas"], 1, "Page frames love grid-template-columns.")
+      ],
+      cards: [C("Flex vs Grid in one line?", "Flex = one axis. Grid = rows and columns."), C("minmax(180px, 1fr) means?", "At least 180px, then share leftover space.")]
+    },
+    {
+      id: "css-responsive", phase: "web", track: "web", title: "Mobile-first responsive CSS", mins: 12,
+      why: "You want mobile apps. Start with the small canvas, then add space.",
+      html: `
+        <p>Mobile-first: write the single-column styles first. Then add width with <code>@media (min-width: …)</code>.</p>
+        <pre>.cards { display: grid; gap: 12px; }
+@media (min-width: 720px) {
+  .cards { grid-template-columns: 1fr 1fr; }
+}</pre>
+        <p>Always include <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</code> or phones will fake a desktop width.</p>
+        <p>Touch targets: ~44px minimum. Do not rely on hover. Test with your finger, not just a mouse.</p>
+        <p>Relative units: <code>rem</code> for type and spacing scales, <code>%</code> / <code>fr</code> for layout, <code>vw</code> sparingly (type in vw can become unreadable).</p>
+        <div class="callout">A “mobile app” in the browser is often a well-built responsive site plus a PWA manifest. Native comes later if you need sensors or stores.</div>`,
+      quiz: [
+        Q("Mobile-first media queries usually use…", ["max-width only", "min-width to add complexity on larger screens", "print", "orientation only"], 1, "Base = small. Enhance = larger."),
+        Q("Without the viewport meta tag…", ["CSS Grid breaks forever", "Phones zoom out as if the screen were ~980px", "HTML will not parse", "Git stops working"], 1, "Always set it.")
+      ],
+      cards: [C("Mobile-first means?", "Default styles target small screens; min-width adds layout."), C("Minimum comfortable tap size?", "About 44×44 CSS pixels.")]
+    },
+    {
+      id: "css-type-color", phase: "web", track: "web", title: "Type and color that look grown-up", mins: 12,
+      why: "You said advanced design is hard. This is the advanced part, in CSS.",
+      html: `
+        <p>Pick <strong>one</strong> display serif or distinctive family for headings, one sans for UI, one mono for code. That is a system, not a vibe.</p>
+        <pre>:root {
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.6rem;
+  --step-3: 2.2rem;
+  --ink: #f0ead8;
+  --muted: #9a9486;
+  --accent: #e4b34a;
+}
+h1 { font-size: var(--step-3); line-height: 1.15; }
+p { font-size: var(--step-0); line-height: 1.5; color: var(--muted); }</pre>
+        <p>A type scale is a multiplier (1.25 is a good start). Limit heading sizes to 4 steps. Line length ~60–72 characters.</p>
+        <h3>Color</h3>
+        <p>Start with 1 background, 1 surface, 1 text, 1 muted text, 1 accent. Contrast: body text on background should pass WCAG AA (~4.5:1). Accent is for actions and highlights, not paragraphs.</p>
+        <div class="callout">Canva templates hide this system from you. Affinity and Figma components should use the same tokens you will put in CSS variables. Name them once (<code>--accent</code>), use them everywhere.</div>`,
+      quiz: [
+        Q("How many accent colors does a beginner system need?", ["Seven, from a generator", "One (plus neutrals)", "None", "One per section"], 1, "Restraint reads as advanced."),
+        Q("CSS variables are useful because…", ["They replace HTML", "One name, many uses; change the token, change the product", "They compile C#", "They animate Godot"], 1, "Tokens = design system.")
+      ],
+      cards: [C("What is a type scale?", "A small set of font sizes related by a ratio."), C("A token is…", "A named value (color, space, size) reused in design and code.")],
+      lab: { type: "html", prompt: "Define --bg, --text, --accent. Style a heading, paragraph, and button using only those tokens.", starterHtml: "<h1>Night studio</h1>\n<p>A quiet place to make things.</p>\n<button>Begin</button>", starterCss: ":root {\n  /* tokens */\n}\nbody { font-family: Georgia, serif; padding: 32px; }\n", starterJs: "" }
+    },
+    {
+      id: "js-dom", phase: "web", track: "web", title: "JavaScript meets the DOM", mins: 14,
+      why: "This is the moment a page becomes a program.",
+      html: `
+        <p>JS selects nodes and changes them.</p>
+        <pre>const btn = document.querySelector("#go");
+const out = document.querySelector("#out");
+btn.addEventListener("click", () => {
+  out.textContent = "Running.";
+});</pre>
+        <p><code>querySelector</code> uses CSS selectors. <code>textContent</code> is safe text. <code>innerHTML</code> parses HTML — only use it with trusted strings (like Foundry’s own lessons), never with user input.</p>
+        <p><code>createElement</code> + <code>append</code> builds UI from data. That is React’s idea, done by hand. You should feel this once before JSX hides it.</p>
+        <div class="callout">If querySelector returns null, your selector does not match (yet). Script in <code>head</code> without <code>defer</code> runs before the HTML exists. Put <code>script</code> at the end of <code>body</code> or use <code>defer</code>.</div>`,
+      quiz: [
+        Q("Why might querySelector return null?", ["JavaScript is disabled in CSS", "The selector is wrong or the element is not in the document yet", "You need TypeScript", "The DOM is read-only"], 1, "Timing and typos."),
+        Q("Prefer textContent over innerHTML when…", ["You need a full layout", "You are putting untrusted or plain text in", "You are writing Python", "Always never"], 1, "Avoid XSS.")
+      ],
+      cards: [C("querySelector uses…", "CSS selectors to find the first match."), C("Why defer or bottom script?", "So the DOM exists before you query it.")],
+      lab: { type: "html", prompt: "When the button is clicked, change the paragraph text to 'You clicked.'", starterHtml: "<p id='out'>Waiting.</p>\n<button id='go'>Click</button>", starterCss: "body { font-family: sans-serif; padding: 24px; }", starterJs: "const btn = document.querySelector('#go');\nconst out = document.querySelector('#out');\n// listen for click\n" }
+    },
+    {
+      id: "js-events", phase: "web", track: "web", title: "Events: the browser talks back", mins: 10,
+      why: "Clicks, types, submits, keydowns — apps are event machines. So are games.",
+      html: `
+        <p>An event is a thing that happened. You register a listener. The browser calls you.</p>
+        <pre>form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = new FormData(form).get("name");
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === " ") jump();
+});</pre>
+        <p><code>preventDefault</code> stops the built-in action (form reload, link navigate). <code>stopPropagation</code> stops the event from bubbling to parents — use sparingly.</p>
+        <p>Godot’s <strong>signals</strong> are the same design: a node emits, another function runs. React’s <code>onClick</code> is the same design. Learn it here, reuse it everywhere.</p>`,
+      quiz: [
+        Q("e.preventDefault() on submit is for…", ["Styling", "Stopping the page reload so JS can handle the data", "Encrypting", "SEO"], 1, "SPA-style forms."),
+        Q("A Godot signal is conceptually closest to…", ["A CSS grid", "An event listener", "A PNG", "A git commit"], 1, "Emitter + subscriber.")
+      ],
+      cards: [C("What is an event listener?", "A function you register to run when something happens."), C("Signals ≈ ?", "Events. Different engine, same idea.")]
+    },
+    {
+      id: "js-async", phase: "web", track: "web", title: "Async: fetch and JSON", mins: 14,
+      why: "Every full-stack app is ‘ask a server, wait, update the UI.’",
+      html: `
+        <pre>async function loadScores() {
+  const res = await fetch("/api/scores");
+  if (!res.ok) throw new Error("Network");
+  const data = await res.json();
+  return data;
+}</pre>
+        <p><code>fetch</code> returns a Promise. <code>await</code> pauses your <code>async</code> function without freezing the whole page. That is why UIs stay clickable while data loads.</p>
+        <p>Always handle failure: network, 404, 500. Show something on screen. Silent <code>catch {}</code> is how apps feel haunted.</p>
+        <p>JSON in / JSON out. Your future Python API will <code>return jsonify(scores)</code> and this function will consume it.</p>
+        <div class="callout">CORS errors mean the server did not allow this origin. You cannot “fix CORS” in the frontend alone. Remember that when you build the backend.</div>`,
+      quiz: [
+        Q("await only works…", ["In Python", "Inside an async function (or top-level in modules)", "In CSS", "On integers"], 1, "async/await is syntax over Promises."),
+        Q("res.ok is false when…", ["JSON is large", "HTTP status is not 2xx", "The user is on mobile", "You used const"], 1, "Always check.")
+      ],
+      cards: [C("What does await wait for?", "A Promise to settle, without blocking the whole UI thread."), C("JSON in fetch is…", "await res.json() after a successful response.")],
+      lab: { type: "js", prompt: "Write async function getTitle() that fetches https://jsonplaceholder.typicode.com/todos/1 and returns data.title. (May need network.)", starter: "async function getTitle() {\n  // fetch, json, return title\n}\n", tests: "assert(typeof getTitle === 'function');\n" }
+    },
+    {
+      id: "figma-to-css", phase: "design", track: "design", title: "From Figma frame to CSS", mins: 12,
+      why: "Design fundamentals stall when they never have to survive implementation.",
+      html: `
+        <p>A Figma frame is a box. Constraints and Auto Layout are CSS. Your job is to name the decisions so they survive.</p>
+        <ol>
+          <li>Set frame size to a real device width (390 or 1440), not an arbitrary artboard.</li>
+          <li>Use Auto Layout everywhere you would use Flex/Grid. Avoid naked x/y unless it is truly decorative.</li>
+          <li>Name layers by role: <code>Header</code>, <code>Card</code>, <code>PrimaryButton</code> — those become class names.</li>
+          <li>Redline: type size, color tokens, padding, gap. If you cannot name it, you cannot build it twice.</li>
+        </ol>
+        <p>Dev Mode / inspect is a hint, not gospel. Generated CSS is often absolute-position soup. You will rewrite it as flex/grid.</p>
+        <div class="callout">Advanced design is not more effects. It is fewer decisions, reused. If a third card appears, a component should already exist.</div>`,
+      quiz: [
+        Q("Absolute positioning for an entire page of UI is…", ["Best practice", "Fragile; prefer flow layout (flex/grid / Auto Layout)", "Required for PWAs", "A Git feature"], 1, "Flow layouts adapt. Absolutes shatter on real content."),
+        Q("Layer names should become…", ["Random emojis", "CSS class / component names", "Git SHAs", "Ports"], 1, "Design and code share a vocabulary.")
+      ],
+      cards: [C("Auto Layout maps to?", "Flexbox (and sometimes Grid)."), C("What makes design ‘advanced’ here?", "Reusable decisions: components, tokens, fewer one-offs.")]
+    },
+    {
+      id: "design-tokens", phase: "design", track: "design", title: "Tokens: color, type, space", mins: 12,
+      why: "This is the advanced design you said is hard — it is a spreadsheet of decisions, not inspiration.",
+      html: `
+        <p>A token is a name for a value. Designers and developers share the names.</p>
+        <pre>color.bg = #0F0E0C
+color.surface = #171614
+color.text = #F0EAD8
+color.accent = #E4B34A
+space.1 = 4
+space.2 = 8
+space.3 = 16
+space.4 = 24
+font.display = Palatino
+font.ui = Segoe UI</pre>
+        <p>In Figma: color styles + text styles + variables. In Affinity: global colors. In CSS: custom properties. In Canva: you mostly cannot — use Canva for social throwaways, not systems.</p>
+        <h3>Spacing</h3>
+        <p>Use a 4 or 8-point grid. If everything is a multiple of 8, alignment happens almost by itself. Random 13px gaps are why UI looks “off” even when you cannot say why.</p>
+        <div class="callout">Limit: 1 accent, 4–5 neutrals, 4 type sizes, 5 spacing steps. Constraints are how taste becomes repeatable.</div>`,
+      quiz: [
+        Q("Why not pick hex codes per frame?", ["Hex is illegal", "You will drift; tokens keep a product looking like one product", "Figma cannot store color", "CSS cannot read hex"], 1, "Systems beat memory."),
+        Q("Canva is weakest for…", ["Quick images", "A reusable multi-screen design system", "Thumbnails", "YouTube covers"], 1, "Know the tool’s job. Canva is not your system source of truth.")
+      ],
+      cards: [C("What is a design token?", "A named reusable value: color, space, type, radius."), C("Why an 8-point grid?", "Fewer spacing choices → accidental alignment.")]
+    },
+    {
+      id: "color-systems", phase: "design", track: "design", title: "Color systems without guessing", mins: 12,
+      why: "Advanced color is contrast, roles, and dark surfaces — not rainbow palettes.",
+      html: `
+        <p>Give every color a <strong>job</strong>:</p>
+        <ul>
+          <li><strong>Background / surface</strong> — canvas and cards.</li>
+          <li><strong>Text / muted</strong> — reading and secondary reading.</li>
+          <li><strong>Accent</strong> — primary actions, progress, focus.</li>
+          <li><strong>Danger / success</strong> — states, used sparingly.</li>
+        </ul>
+        <p>On dark UI, do not use pure <code>#000</code> and pure <code>#fff</code> for large areas — it vibrates. Lift the background slightly (Foundry uses a warm near-black) and off-white text.</p>
+        <p>Accent should pass contrast on the background if it is text. If it fails, use accent on buttons with dark text on the accent (as Foundry’s gold buttons do).</p>
+        <p>DaVinci and game UI follow the same roles: one highlight color, readable text, consistent surfaces. A game HUD with five neons is the same mistake as a website with five primary buttons.</p>
+        <div class="callout">Check contrast with a picker. If you cannot read it at arm’s length on your phone, it is decoration, not text.</div>`,
+      quiz: [
+        Q("A good reason to put dark text on a gold button…", ["Gold looks expensive", "The gold may not contrast with a dark page as text, but as a fill it can carry dark ink", "Apple requires it", "CSS Grid needs it"], 1, "Contrast is about the pair, not the color in isolation."),
+        Q("Pure black plus pure white on OLED…", ["Is always best", "Can feel harsh; slightly warm/lifted neutrals read as more designed", "Is required for a11y", "Fixes Flexbox"], 1, "Taste + comfort.")
+      ],
+      cards: [C("Color roles to name?", "bg, surface, text, muted, accent, danger/success."), C("Accent as text failed contrast. What now?", "Use it as a button fill with dark text, or darken/lighten it.")]
+    },
+    {
+      id: "components-design", phase: "design", track: "design", title: "Components in Figma, components in code", mins: 10,
+      why: "Variants in Figma are props in React. Learn one word for both.",
+      html: `
+        <p>A component is a reusable template with slots (content) and variants (states).</p>
+        <p>Figma: Component + variants (Primary / Ghost, Default / Hover / Disabled). React: <code>&lt;Button variant="ghost" disabled&gt;</code>. Godot: a scene reused as an instanced button.</p>
+        <p>Build a button, an input, a card. Only then build a page. Pages made of one-off frames do not scale — that is the wall after “fundamentals.”</p>
+        <div class="callout">If you change the primary button once and twelve screens update, you are doing advanced design. If you hunt-and-peck twelve frames, you are still drawing.</div>
+        <p>Affinity: symbols / constraints for asset kits (icons, game items). Export SVG/PNG into a folder your site or Godot <code>res://</code> can see.</p>`,
+      quiz: [
+        Q("A Figma variant is closest to…", ["A git clone", "A React prop that switches style/state", "A Python venv", "A media query file"], 1, "Same idea, different software."),
+        Q("You should componentize…", ["Only the whole page", "Repeating pieces: buttons, cards, list rows", "Nothing until the capstone", "JPEGs"], 1, "Smallest repeating unit.")
+      ],
+      cards: [C("Figma variant ≈ React…", "prop / variant."), C("Advanced design in one test?", "Change once, update everywhere.")]
+    },
+    {
+      id: "modern-js", phase: "react", track: "web", title: "Modern JavaScript you need for React", mins: 12,
+      why: "React tutorials assume destructuring, map, modules, and arrows. Missing them feels like ‘I cannot React.’",
+      html: `
+        <pre>const { hp, name } = player;
+const doubled = nums.map(n =&gt; n * 2);
+const alive = list.filter(p =&gt; p.hp &gt; 0);
+const next = { ...player, hp: player.hp - 1 };
+export function Title() {}
+import { Title } from "./Title.js";</pre>
+        <p><code>map</code> turns arrays into arrays (lists of components later). <code>filter</code> keeps some. Spread copies objects so you do not mutate state in place — React will insist on this.</p>
+        <p>Modules: one file, one main job. <code>export</code> what others need. This is the real ‘organization skill’ people blame on React.</p>
+        <div class="callout">If <code>nums.map</code> is hazy, do not start React today. Stay here until you can map an array of names into an array of strings without Googling the callback shape.</div>`,
+      quiz: [
+        Q("{ ...player, hp: 9 } does what?", ["Deletes player", "Copies player with hp replaced by 9", "CSS spread", "Starts Godot"], 1, "Immutable update."),
+        Q("list.map(fn) returns…", ["Undefined always", "A new array of fn’s results", "Only the first item", "A Promise"], 1, "The heart of rendering lists.")
+      ],
+      cards: [C("Why spread objects in React?", "To copy state instead of mutating it."), C("map is for…", "Transforming each item of an array into a new array.")],
+      lab: { type: "js", prompt: "From const names = ['Ava','Ken'], create greetings = names.map(...) to ['Hi Ava','Hi Ken'].", starter: "const names = ['Ava', 'Ken'];\nlet greetings;\n", tests: "assert(Array.isArray(greetings));\nassert(greetings[0] === 'Hi Ava' && greetings[1] === 'Hi Ken');" }
+    },
+    {
+      id: "ts-why", phase: "react", track: "web", title: "TypeScript is JavaScript with a proofreader", mins: 12,
+      why: "You listed TS. It pays off after JS is comfortable — not before.",
+      html: `
+        <pre>function damage(hp: number, amount: number): number {
+  return Math.max(0, hp - amount);
+}
+type Player = { name: string; hp: number };
+const p: Player = { name: "Ava", hp: 10 };</pre>
+        <p>Types vanish at runtime. They exist for you and your editor. The error “Argument of type string is not assignable to number” is a quiz you win before the browser loads.</p>
+        <p>Start with <code>strict</code> on. Do not spam <code>any</code>. If you need “this or that,” use a union: <code>status: "idle" | "load" | "err"</code>.</p>
+        <p>C# and TS feel related on purpose: both are typed, both use similar class/interface shapes. Learning TS now makes C# later less of a second mountain.</p>
+        <div class="callout">If you are fighting the compiler more than the problem, your types are lying. Simplify the type until it matches reality.</div>`,
+      quiz: [
+        Q("TypeScript types at runtime are…", ["Enforced by the browser", "Erased; JS runs", "Stored in CSS", "Required by Godot"], 1, "tsc compiles away types."),
+        Q("any is…", ["A best practice", "An escape hatch that turns off the proofreader", "Faster than number", "A React hook"], 1, "Use unknown or a real type instead.")
+      ],
+      cards: [C("What does tsc emit?", "JavaScript (types erased)."), C("A union type example?", "\"idle\" | \"load\" | \"err\"")]
+    },
+    {
+      id: "react-model", phase: "react", track: "web", title: "React’s mental model", mins: 12,
+      why: "Hooks make no sense until you see UI as a function of state.",
+      html: `
+        <p>React: <strong>UI = f(state)</strong>. You describe what the screen should look like for this data. React updates the DOM.</p>
+        <pre>function Counter() {
+  const [n, setN] = useState(0);
+  return (
+    &lt;button onClick={() =&gt; setN(n + 1)}&gt;
+      {n}
+    &lt;/button&gt;
+  );
+}</pre>
+        <p>When <code>n</code> changes, React calls <code>Counter</code> again and syncs the DOM. You do not write <code>button.textContent =</code>.</p>
+        <p>Props are inputs from a parent. State is data this component owns. If two children need the same data, lift state up.</p>
+        <div class="callout warn">Do not mutate state. <code>n++</code> will not trigger a render. <code>setN(n + 1)</code> will. Arrays: copy, then set.</div>
+        <p>This is why we did vanilla DOM first: so React’s value is obvious (less manual syncing), not mystical.</p>`,
+      quiz: [
+        Q("Why does n++ fail to update the screen?", ["Buttons cannot show numbers", "Mutating state skips React’s change detection", "You need C#", "JSX is comments"], 1, "Use the setter."),
+        Q("Props are…", ["CSS only", "Inputs passed from parent to child", "A database", "Git hooks"], 1, "Like function arguments.")
+      ],
+      cards: [C("UI = ?", "f(state) — a function of state."), C("Lift state up when?", "When siblings need the same data.")]
+    },
+    {
+      id: "react-effects", phase: "react", track: "web", title: "Effects, lists, and forms in React", mins: 14,
+      why: "This is the rest of everyday React: load data, render arrays, take input.",
+      html: `
+        <pre>useEffect(() =&gt; {
+  let ignore = false;
+  fetch("/api/items")
+    .then(r =&gt; r.json())
+    .then(data =&gt; { if (!ignore) setItems(data); });
+  return () =&gt; { ignore = true; };
+}, []);
+
+{items.map(item =&gt; (
+  &lt;li key={item.id}&gt;{item.name}&lt;/li&gt;
+))}</pre>
+        <p><code>useEffect</code> is for syncing with the outside world (fetch, timers, subscriptions). The empty dependency array means “once, after mount.” Cleanup matters.</p>
+        <p><code>key</code> must be stable and unique (an id, not the index if the list reorders).</p>
+        <p>Forms: controlled inputs — <code>value={name} onChange={e =&gt; setName(e.target.value)}</code>. State is the source of truth, like Figma components with a text property.</p>
+        <div class="callout">Routing (React Router) is “which component for this URL.” Learn it when you have two real screens, not before.</div>`,
+      quiz: [
+        Q("key={index} is risky when…", ["The list is static forever", "Items insert/reorder/delete", "You use TypeScript", "You use CSS"], 1, "Index keys confuse identity."),
+        Q("useEffect’s cleanup function runs…", ["Never", "Before the effect re-runs and on unmount", "Only in Godot", "When CSS changes"], 1, "Cancel fetches / timers here.")
+      ],
+      cards: [C("useEffect is for…", "Side effects: fetch, timers, subscriptions."), C("A controlled input is…", "Value comes from state; onChange updates state.")]
+    },
+    {
+      id: "backend-role", phase: "backend", track: "fullstack", title: "What a backend is for", mins: 8,
+      why: "Full stack means you know which side should own which job.",
+      html: `
+        <p>The browser is a stranger’s computer. They can edit your JS. So secrets, scores you care about, user accounts, and the database live on a <strong>server</strong>.</p>
+        <ul>
+          <li>Frontend: presentation, optimistic UI, client validation.</li>
+          <li>Backend: source of truth, auth, business rules, storage.</li>
+        </ul>
+        <p>They talk over HTTP: URLs, verbs (GET/POST/PUT/DELETE), headers, JSON bodies. That pair of ideas is REST-ish enough to ship.</p>
+        <p>Python (Flask or FastAPI) is your server language because you already study Python. Node/Express is the same idea in JS — learn it later as a dialect if a job asks.</p>
+        <div class="callout">A JSON file in the frontend is not a backend. Refresh and it reverts. Many “apps” can start there; anything multi-user cannot.</div>`,
+      quiz: [
+        Q("Where should password checks live?", ["Only in React state", "On the server", "In CSS", "In Figma"], 1, "The client is not trusted."),
+        Q("GET vs POST in one line?", ["GET reads; POST submits/changes (typically)", "They are identical", "GET is Python-only", "POST is for images only"], 0, "Verbs communicate intent.")
+      ],
+      cards: [C("Why a backend?", "Trusted place for secrets, rules, and data."), C("HTTP JSON APIs are…", "How frontend and backend exchange structured data.")]
+    },
+    {
+      id: "python-api", phase: "backend", track: "fullstack", title: "A tiny Python API", mins: 14,
+      why: "You already write Python. Point it at the network.",
+      html: `
+        <p>FastAPI sketch:</p>
+        <pre>from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+notes = []
+
+class Note(BaseModel):
+    text: str
+
+@app.get("/notes")
+def list_notes():
+    return notes
+
+@app.post("/notes")
+def add_note(note: Note):
+    notes.append(note.dict())
+    return note</pre>
+        <p>Run locally, then <code>fetch("http://127.0.0.1:8000/notes")</code> from a frontend. CORS middleware will be required in development.</p>
+        <p>Pydantic models are TypeScript types for Python — you already met the idea.</p>
+        <p>Next step in real life: replace the list with SQLite so data survives restart. <code>sqlite3</code> in the stdlib is enough for class projects.</p>
+        <div class="callout">Do this on your machine (not in Foundry’s JS lab): pip install fastapi uvicorn, save the file, uvicorn main:app --reload.</div>`,
+      quiz: [
+        Q("@app.get(\"/notes\") means…", ["A CSS route", "When someone GET-requests /notes, run this function", "A Godot signal", "Deletes notes"], 1, "Decorator maps URL + verb to a function."),
+        Q("Why SQLite after an in-memory list?", ["Lists are illegal", "Process restart wipes memory; a file database lasts", "SQLite is a frontend library", "Faster CSS"], 1, "Persistence.")
+      ],
+      cards: [C("FastAPI route is…", "A function bound to a verb and path."), C("Why CORS in dev?", "Browser blocks cross-origin by default.")],
+      lab: { type: "checklist", prompt: "On your machine.", items: ["Create a venv and install fastapi uvicorn", "Write GET /health that returns {ok: true}", "Hit it in the browser or with curl"] }
+    },
+    {
+      id: "auth-db", phase: "backend", track: "fullstack", title: "SQLite and auth, conceptually", mins: 10,
+      why: "You do not need to invent security. You do need the picture.",
+      html: `
+        <p>Tables are lists of rows. A <code>users</code> table: id, email, password_hash. Never store raw passwords. Hash with a library (bcrypt / argon2).</p>
+        <p>Login: client sends email+password → server checks hash → server sends a <strong>session cookie</strong> or <strong>token</strong>. Later requests include it. Server looks up who you are.</p>
+        <p>For school projects: one SQLite file, a users table, a notes table with <code>user_id</code>. Foreign keys are “this note belongs to that user.”</p>
+        <div class="callout warn">Do not roll your own crypto. Do not put API keys in frontend code. Do not commit <code>.env</code> to Git.</div>
+        <p>This is enough conceptual map to follow a FastAPI + SQLite tutorial without drowning. You will build it in the Notes API project.</p>`,
+      quiz: [
+        Q("password_hash exists because…", ["It is faster to type", "A stolen database should not reveal real passwords", "HTML requires it", "Godot signals need it"], 1, "Hashing is one-way enough for verification."),
+        Q("A foreign key user_id on notes means…", ["The note is CSS", "Each note points at the user who owns it", "Everyone can edit", "JSON is invalid"], 1, "Ownership in data.")
+      ],
+      cards: [C("Why hash passwords?", "So the real password is not sitting in the database."), C("Session/token proves…", "This request is from a logged-in user.")]
+    },
+    {
+      id: "mobile-options", phase: "mobile", track: "mobile", title: "PWA vs React Native vs Godot mobile", mins: 10,
+      why: "You want mobile apps. Pick the thinnest tool that fits the product.",
+      html: `
+        <ul>
+          <li><strong>Responsive web + PWA</strong> — same HTML/CSS/JS/React you already have. Installable, offline-capable, no App Store required. Foundry itself is this.</li>
+          <li><strong>React Native / Expo</strong> — React components compile to native views. Use when you need store listing, camera, filesystem, or native feel.</li>
+          <li><strong>Godot export</strong> — for games. Do not build a CRUD notes app in Godot.</li>
+        </ul>
+        <p>A PWA needs a <code>manifest.webmanifest</code> (name, icons, display=standalone) and a service worker (cache for offline). HTTPS in production.</p>
+        <p>React Native looks like React, but <code>div</code> becomes <code>View</code>, <code>span</code> becomes <code>Text</code>, CSS becomes a subset. That is why React comes first.</p>
+        <div class="callout">If the mobile app is mostly content and forms, ship a PWA first. Native is a cost you should justify.</div>`,
+      quiz: [
+        Q("Foundry is which kind of mobile app?", ["A Godot export", "A PWA (web app that can install)", "A kernel module", "A C# MAUI app"], 1, "Practice what you will preach."),
+        Q("React Native after React because…", ["Apple said so", "The component/state model transfers; the primitives change", "It uses GDScript", "It is easier than HTML"], 1, "Dialect, not a new religion.")
+      ],
+      cards: [C("When is a PWA enough?", "Content, forms, offline reading, install-to-home-screen."), C("View in RN ≈ ?", "div. Text ≈ span.")]
+    },
+    {
+      id: "pwa-touch", phase: "mobile", track: "mobile", title: "Installability and touch", mins: 10,
+      why: "This is the mobile work you can do with skills you already have after phase 01.",
+      html: `
+        <p>Manifest fields that matter: <code>name</code>, <code>short_name</code>, <code>start_url</code>, <code>display: standalone</code>, <code>theme_color</code>, icons 192 and 512.</p>
+        <p>Service worker: cache the app shell on install; on fetch, try cache then network (or network then cache). Offline should show something, not a dinosaur if you can help it.</p>
+        <p>Touch: no hover-only menus, 44px targets, <code>inputmode</code> on fields, <code>env(safe-area-inset-bottom)</code> so iPhones do not hide your nav under the home bar. Foundry’s CSS does this — read it.</p>
+        <div class="callout">Add to Home Screen on iOS is Share → Add to Home Screen. On Chrome Android: the install prompt or menu. Profile in this app walks through it.</div>`,
+      quiz: [
+        Q("display: standalone makes the PWA…", ["Faster JS", "Run without browser chrome, like an app", "A native View", "A Godot scene"], 1, "That is the ‘app’ feeling."),
+        Q("safe-area-inset-bottom is for…", ["Grid gaps", "Notching / home indicator overlap", "SEO", "Python"], 1, "Especially bottom navs.")
+      ],
+      cards: [C("Two PWA ingredients?", "Web app manifest + service worker."), C("Why 44px targets?", "Fingers are imprecise.")]
+    },
+    {
+      id: "game-loop", phase: "games", track: "games", title: "The game loop", mins: 10,
+      why: "Websites wait for events. Games tick even when no one clicks.",
+      html: `
+        <p>Every frame (~60Hz): process input → update state (physics, AI) → draw. Godot splits this into <code>_process(delta)</code> (frames) and <code>_physics_process(delta)</code> (fixed physics ticks). <code>delta</code> is seconds since last frame — multiply movement by it so speed is stable.</p>
+        <pre>func _process(delta):
+    var dir = Input.get_axis("left", "right")
+    position.x += dir * speed * delta</pre>
+        <p>This is the same idea as a JS <code>requestAnimationFrame</code> loop. A website Counter does not need a loop; a moving sprite does.</p>
+        <div class="callout">Do not busy-wait. Never <code>while true: move()</code> without yielding to the engine. You will freeze the game.</div>
+        <p>State lives on nodes (variables on the script). Scenes are trees of nodes — not unlike the DOM.</p>`,
+      quiz: [
+        Q("Why multiply by delta?", ["For CSS", "So movement is time-based, not frame-rate-based", "To compile C#", "To hash passwords"], 1, "10 fps and 60 fps should feel similar."),
+        Q("A Godot scene tree is conceptually like…", ["The DOM tree", "A PNG", "DNS", "Flexbox gap"], 0, "Parent/child nodes, queries, signals.")
+      ],
+      cards: [C("Game loop steps?", "Input → update → draw, every frame."), C("delta is?", "Elapsed seconds; scale motion by it.")]
+    },
+    {
+      id: "gdscript-python", phase: "games", track: "games", title: "GDScript for people who know Python", mins: 12,
+      why: "This is the payoff for not starting Godot in a vacuum.",
+      html: `
+        <p>If you can read Python, you can read GDScript in an afternoon. Differences that matter:</p>
+        <ul>
+          <li><code>func</code> not <code>def</code>. <code>signal</code> keyword. <code>@export</code> shows a var in the inspector.</li>
+          <li><code>:=</code> inferred types. <code>$Player</code> is <code>get_node("Player")</code>.</li>
+          <li><code>_ready()</code> is “DOMContentLoaded for this node.” <code>_process</code> is the loop.</li>
+          <li>Indentation matters, like Python. Colons start blocks, like Python.</li>
+        </ul>
+        <pre>extends CharacterBody2D
+@export var speed := 200.0
+
+func _physics_process(delta):
+    var input := Input.get_vector("left", "right", "up", "down")
+    velocity = input * speed
+    move_and_slide()</pre>
+        <p>C# in Godot is optional: use it if you already love C# or need performance/tooling. It is not required to ship a 2D game. Foundry puts it after you have shipped one GDScript game so you are learning C# syntax, not “how games work” at the same time.</p>`,
+      quiz: [
+        Q("_ready() runs…", ["Every frame", "Once when the node enters the scene tree", "Only on export", "When CSS loads"], 1, "Setup goes here."),
+        Q("You should start Godot in C# when…", ["Always, day one", "After one small GDScript game, if you have a reason", "Never", "Before HTML"], 1, "One difficulty at a time.")
+      ],
+      cards: [C("func vs def?", "GDScript uses func; Python uses def. Same idea."), C("$NodeName is?", "Shorthand to get a child node.")],
+      lab: { type: "checklist", prompt: "In Godot 4.", items: ["Create a 2D scene with a CharacterBody2D + sprite + CollisionShape2D", "Attach a script that moves with arrow keys using delta", "Press Play and walk around"] }
+    },
+    {
+      id: "godot-signals", phase: "games", track: "games", title: "Scenes, signals, collisions", mins: 12,
+      why: "This is Godot’s event system — you already learned it as addEventListener.",
+      html: `
+        <p>Prefer small scenes: Player, Coin, HUD. Instance them. When the player touches a coin, the coin emits <code>collected</code>, the HUD listens and adds score. Decoupled, like DOM events.</p>
+        <pre>signal collected
+func _on_body_entered(body):
+    collected.emit()
+    queue_free()</pre>
+        <p>Collision layers/masks are “who can hit whom.” Area2D for pickups, CharacterBody2D for the actor, StaticBody2D for walls.</p>
+        <p>UI in Godot uses Control nodes (a separate layout system, closer to web flex than to sprites). Keep HUD as a CanvasLayer so it does not move with the camera.</p>
+        <p>Export: Web (HTML5) puts your game in a browser — your web skills help you wrap it in a site. Android export is your “mobile game” path, different from React Native on purpose.</p>`,
+      quiz: [
+        Q("queue_free() does what?", ["Saves the game", "Removes the node at a safe time", "Compiles C#", "Commits git"], 1, "How coins disappear."),
+        Q("HUD on a CanvasLayer because…", ["It must ignore world camera movement", "Godot requires it for sprites", "It is faster Python", "CSS Grid"], 0, "UI stays put.")
+      ],
+      cards: [C("Signals are…", "Godot events. Connect emitter to a function."), C("Area2D is typically for…", "Pickups / triggers, not solid physics bodies.")]
+    },
+    {
+      id: "csharp-when", phase: "games", track: "games", title: "When C# is worth it", mins: 8,
+      why: "It is on your list. It should not hijack the spine.",
+      html: `
+        <p>C# is a typed, compiled language from Microsoft. Jobs: Unity, Godot C#, tooling, some backends, XR.</p>
+        <p>You already met its cousins: types like TypeScript, braces like JS, classes like every CS course.</p>
+        <pre>public class Player : CharacterBody2D {
+  [Export] public float Speed { get; set; } = 200f;
+  public override void _PhysicsProcess(double delta) {
+    var input = Input.GetVector("left", "right", "up", "down");
+    Velocity = input * Speed;
+    MoveAndSlide();
+  }
+}</pre>
+        <p>Learn C# after: JS functions, TS types, one GDScript game. Then a focused C# course (or Unity if you switch engines) will stick, because the game ideas exist.</p>
+        <div class="callout">If a tutorial says “learn C# first then Unity then Godot then web,” ignore it. That is their product funnel, not your dependency graph.</div>`,
+      quiz: [
+        Q("C# [Export] is like…", ["CSS export", "GDScript @export", "git push", "JSON.parse"], 1, "Show it in the inspector."),
+        Q("Best moment to add C# in this path?", ["Lesson 1", "After a small GDScript game and some TypeScript", "Instead of HTML", "Never, it is deprecated"], 1, "Syntax on top of known ideas.")
+      ],
+      cards: [C("C# is closest to which you already study?", "TypeScript + Java-like classes; used in Godot/Unity."), C("Unity vs Godot here?", "Foundry standardizes on Godot so you finish one engine.")]
+    },
+    {
+      id: "capstone-mindset", phase: "capstone", track: "fullstack", title: "One maker, three surfaces", mins: 8,
+      why: "Specialization without a split identity.",
+      html: `
+        <p>You do not need three careers. You need a <strong>taste</strong> (design tokens, motion, audio) and a <strong>spine</strong> (JS/TS/React + Python + Godot) that can wear three skins.</p>
+        <ul>
+          <li><strong>Website</strong> — React + CSS tokens + maybe a Python API.</li>
+          <li><strong>Mobile</strong> — that site as a PWA, or React Native if the store matters.</li>
+          <li><strong>Game</strong> — Godot, exported to web to live on the same site.</li>
+        </ul>
+        <p>DaVinci: trailer / explainer for the game and the app. Affinity: icons and textures. Figma: screens and components. Canva: quick social. Each creative tool has a lane so you stop opening all four for the same task.</p>
+        <div class="callout">Finish small public things. A shipped 3-day project teaches more than a year of half-watched courses. Path → Projects is the queue.</div>`,
+      quiz: [
+        Q("The unifying stack in Foundry is…", ["C# + Unity + Unreal", "JS/TS/React + Python + Godot, with design tokens", "Only Figma", "PHP + jQuery"], 1, "Re-read the spine anytime you panic."),
+        Q("Canva’s lane is…", ["Source of truth for the design system", "Quick social / throwaway graphics", "Game physics", "The database"], 1, "Use it on purpose, not by default.")
+      ],
+      cards: [C("Three surfaces, one spine?", "Web (React), mobile (PWA/RN), game (Godot)."), C("Why ship small?", "Finished work compounds; infinite tutorials do not.")]
+    }
+  ];
+
+  const PROJECTS = [
+    {
+      id: "p-link", phase: "web", title: "Link-in-bio page", mins: 90,
+      blurb: "A single HTML/CSS page that is actually yours. Host it later on GitHub Pages.",
+      skills: ["HTML", "CSS", "Git"],
+      milestones: [
+        "Semantic header, main, footer",
+        "Your name, 1 paragraph, 4 links",
+        "Flexbox stack on mobile, nicer width on desktop",
+        "Tokens for color and type (no random hex in 12 places)",
+        "Git repo with 3+ meaningful commits"
+      ]
+    },
+    {
+      id: "p-landing", phase: "design", title: "Landing page from Figma", mins: 180,
+      blurb: "Design in Figma with Auto Layout + components, then implement within ~8px of your own mock.",
+      skills: ["Figma", "CSS", "Type"],
+      milestones: [
+        "Figma: type styles, color styles, Button component with 2 variants",
+        "Desktop and 390px frames",
+        "HTML/CSS implementation using flex/grid, no absolute soup",
+        "One real image from Affinity or a proper export",
+        "Responsive without horizontal scroll"
+      ]
+    },
+    {
+      id: "p-clicker", phase: "web", title: "Browser micro-game", mins: 120,
+      blurb: "Vanilla JS: click / keyboard, score, reset. Proves events + state without React or Godot.",
+      skills: ["JS", "DOM", "Game loop lite"],
+      milestones: [
+        "A score and a target to click or a key to press",
+        "Timer or lives so it can end",
+        "Restart button",
+        "Keyboard and pointer both work",
+        "README: what you would move to Godot later"
+      ]
+    },
+    {
+      id: "p-tracker", phase: "react", title: "React tracker", mins: 180,
+      blurb: "A tiny React + TS app: list, add, complete. LocalStorage persistence.",
+      skills: ["React", "TypeScript", "State"],
+      milestones: [
+        "Vite + React + TS running",
+        "Add item, toggle done, delete",
+        "State held in one parent",
+        "Persist to localStorage",
+        "Components: Item, Form, List — not one file blob"
+      ]
+    },
+    {
+      id: "p-notes", phase: "backend", title: "Notes API + UI", mins: 300,
+      blurb: "Python API + the React tracker talking to it. This is full stack.",
+      skills: ["Python", "REST", "React"],
+      milestones: [
+        "GET and POST /notes in FastAPI or Flask",
+        "SQLite persistence",
+        "React fetch on load and on add",
+        "Error state on screen if the server is down",
+        "README with how to run both halves"
+      ]
+    },
+    {
+      id: "p-pwa", phase: "mobile", title: "Make it installable", mins: 90,
+      blurb: "Turn the tracker (or Foundry itself) into a PWA you can add on your phone.",
+      skills: ["PWA", "Manifest", "Touch"],
+      milestones: [
+        "manifest with icons and standalone",
+        "Service worker caches the shell",
+        "Works on your phone over local network or deploy",
+        "Safe area and 44px targets",
+        "Screenshot in README from the home screen"
+      ]
+    },
+    {
+      id: "p-godot", phase: "games", title: "Catch / collect 2D game", mins: 300,
+      blurb: "Player, pickups, score, game over, restart. Export to HTML and put it on your site.",
+      skills: ["Godot", "GDScript", "Signals"],
+      milestones: [
+        "Move with input * delta",
+        "Coins emit a signal; HUD updates",
+        "Lives or timer; game over screen",
+        "One sound and one particle or tween",
+        "HTML export linked from your link-in-bio"
+      ]
+    },
+    {
+      id: "p-capstone", phase: "capstone", title: "Studio trio", mins: 600,
+      blurb: "Same visual tokens: a marketing page, a PWA or RN shell, and a Godot web export. Optional 30s DaVinci trailer.",
+      skills: ["Everything"],
+      milestones: [
+        "Shared tokens (color, type) across web and game HUD",
+        "Live or GitHub-hosted site",
+        "Installable or store-ready mobile surface",
+        "Playable game build",
+        "Short trailer or GIF, Affinity/Figma kit in /design"
+      ]
+    }
+  ];
+
+  const ROSETTA = [
+    { idea: "Variable", js: "let n = 3;", py: "n = 3", gd: "var n := 3", cs: "int n = 3;" },
+    { idea: "Constant", js: "const PI = 3.14;", py: "PI = 3.14  # convention", gd: "const PI := 3.14", cs: "const double Pi = 3.14;" },
+    { idea: "If", js: "if (n > 0) {}", py: "if n > 0:", gd: "if n > 0:", cs: "if (n > 0) {}" },
+    { idea: "For loop", js: "for (const x of list) {}", py: "for x in list:", gd: "for x in list:", cs: "foreach (var x in list) {}" },
+    { idea: "Function", js: "function f(a) { return a; }", py: "def f(a):\n    return a", gd: "func f(a):\n    return a", cs: "int F(int a) { return a; }" },
+    { idea: "List / array", js: "const xs = [1, 2];\nxs.push(3);", py: "xs = [1, 2]\nxs.append(3)", gd: "var xs = [1, 2]\nxs.append(3)", cs: "var xs = new List<int>{1,2};\nxs.Add(3);" },
+    { idea: "Map / object", js: "const p = { hp: 10 };\np.hp--;", py: "p = {'hp': 10}\np['hp'] -= 1", gd: "var p = {\"hp\": 10}\np.hp -= 1", cs: "class P { public int Hp; }" },
+    { idea: "String interp", js: "`Hi ${name}`", py: 'f"Hi {name}"', gd: '"Hi %s" % name', cs: '$"Hi {name}"' },
+    { idea: "Null", js: "null / undefined", py: "None", gd: "null", cs: "null" },
+    { idea: "Boolean", js: "true / false", py: "True / False", gd: "true / false", cs: "true / false" },
+    { idea: "Event", js: "el.addEventListener('click', fn)", py: "button.bind('<Button>', fn)", gd: "btn.pressed.connect(fn)", cs: "btn.Pressed += fn;" },
+    { idea: "Async", js: "await fetch(url)", py: "await http.get(url)", gd: "await $http.request(url)", cs: "await http.GetAsync(url);" }
+  ];
+
+  const SKILL_CHECKS = [
+    { id: "html", label: "I can write a semantic HTML page from scratch (headings, links, image) without a tutorial." },
+    { id: "css", label: "I can lay out a navbar + content with Flexbox or Grid without copy-pasting." },
+    { id: "js", label: "I can make a button change the page with JavaScript." },
+    { id: "react", label: "I can build a React component that uses useState." },
+    { id: "python", label: "I can write Python functions that use lists or dicts." },
+    { id: "godot", label: "I have moved a sprite with input in Godot." },
+    { id: "figma", label: "I can build a Figma component with variants and Auto Layout." }
+  ];
+
+  const TRACK_META = {
+    foundations: { label: "Foundations", cls: "track-foundations" },
+    web: { label: "Web", cls: "track-web" },
+    design: { label: "Design", cls: "track-design" },
+    games: { label: "Games", cls: "track-games" },
+    mobile: { label: "Mobile", cls: "track-mobile" },
+    fullstack: { label: "Full stack", cls: "track-fullstack" }
+  };
+
+  function defaultState() {
+    return {
+      name: "",
+      onboarded: false,
+      skills: {},
+      minutes: 45,
+      completed: {},
+      notes: {},
+      labDone: {},
+      projectChecks: {},
+      projectDone: {},
+      srs: {},
+      streak: { count: 0, last: "" },
+      xp: 0,
+      lastLesson: null,
+      playground: { html: "", css: "", js: "", py: "", tab: "web" }
+    };
+  }
+
+  let state = defaultState();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) state = Object.assign(defaultState(), JSON.parse(raw));
+    } catch (e) { /* ignore */ }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  function todayStr() {
+    const d = new Date();
+    const z = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+  }
+  function bumpStreak() {
+    const t = todayStr();
+    if (state.streak.last === t) return;
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const ys = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, "0")}-${String(y.getDate()).padStart(2, "0")}`;
+    state.streak.count = state.streak.last === ys ? state.streak.count + 1 : 1;
+    state.streak.last = t;
+  }
+
+  function lessonById(id) { return LESSONS.find((l) => l.id === id); }
+  function completedCount() { return LESSONS.filter((l) => state.completed[l.id]).length; }
+  function nextLesson() {
+    return LESSONS.find((l) => !state.completed[l.id]) || null;
+  }
+  function phaseProgress(pid) {
+    const ls = LESSONS.filter((l) => l.phase === pid);
+    const d = ls.filter((l) => state.completed[l.id]).length;
+    return { d, t: ls.length, pct: ls.length ? Math.round((d / ls.length) * 100) : 0 };
+  }
+
+  function dueCards() {
+    const now = Date.now();
+    const out = [];
+    for (const [id, c] of Object.entries(state.srs)) {
+      if (c.due <= now) out.push({ id, ...c });
+    }
+    out.sort((a, b) => a.due - b.due);
+    return out;
+  }
+  function ensureCardsForLesson(lesson) {
+    (lesson.cards || []).forEach((card, i) => {
+      const id = lesson.id + ":" + i;
+      if (!state.srs[id]) {
+        state.srs[id] = { f: card.f, b: card.b, due: Date.now(), ease: 2.5, interval: 0, reps: 0, lesson: lesson.id };
+      }
+    });
+  }
+  function reviewCard(id, quality) {
+    const c = state.srs[id];
+    if (!c) return;
+    if (quality < 3) {
+      c.reps = 0;
+      c.interval = 0;
+      c.due = Date.now() + 10 * 60 * 1000;
+    } else {
+      if (c.reps === 0) c.interval = 1;
+      else if (c.reps === 1) c.interval = 3;
+      else c.interval = Math.round(c.interval * c.ease);
+      c.reps += 1;
+      c.ease = Math.max(1.3, c.ease + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+      c.due = Date.now() + c.interval * 24 * 60 * 60 * 1000;
+    }
+    bumpStreak();
+    save();
+  }
+
+  function completeLesson(id) {
+    const les = lessonById(id);
+    if (!les) return;
+    const first = !state.completed[id];
+    state.completed[id] = Date.now();
+    state.lastLesson = id;
+    ensureCardsForLesson(les);
+    if (first) state.xp += 10 + (les.mins || 5);
+    bumpStreak();
+    save();
+  }
+
+  let currentPath = "onboarding/0";
+
+  function route() {
+    const [name, id, extra] = String(currentPath || "today").split("/");
+    return { name: name || "today", id, extra };
+  }
+  function go(to) {
+    currentPath = String(to || "today").replace(/^#\/?/, "");
+    try {
+      const next = "#/" + currentPath;
+      if (location.hash !== next) location.hash = next;
+    } catch (err) { /* sandboxed previews may block hash */ }
+    render();
+  }
+
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2200);
+  }
+
+  function shell(active, inner) {
+    const name = state.name || "maker";
+    return `
+      <div class="shell">
+        <aside class="side">
+          <div class="brand">
+            <div class="mark">F</div>
+            <div>
+              <div class="brand-name">Foundry</div>
+              <div class="brand-sub">Learn in order</div>
+            </div>
+          </div>
+          <nav class="sidenav">
+            ${navLink("today", "Today", active)}
+            ${navLink("path", "Path", active)}
+            ${navLink("practice", "Practice", active)}
+            ${navLink("projects", "Projects", active)}
+            ${navLink("you", "Profile", active)}
+          </nav>
+          <div class="side-foot">
+            <div class="streak-mini">Hello, <b>${esc(name)}</b><br/>Streak <b>${state.streak.count}</b> · ${completedCount()}/${LESSONS.length} lessons</div>
+          </div>
+        </aside>
+        <div class="main">${inner}</div>
+        <nav class="bnav">
+          ${navLink("today", "Today", active, ICONS.today)}
+          ${navLink("path", "Path", active, ICONS.path)}
+          ${navLink("practice", "Practice", active, ICONS.practice)}
+          ${navLink("projects", "Projects", active, ICONS.projects)}
+          ${navLink("you", "You", active, ICONS.you)}
+        </nav>
+      </div>`;
+  }
+  function navLink(name, label, active, icon) {
+    return `<a href="#/${name}" class="${active === name ? "active" : ""}">${icon || ""}${label}</a>`;
+  }
+
+  function viewOnboarding() {
+    const step = Number(route().id || 0);
+    if (step === 0) {
+      return `
+        <div class="article" style="padding-top:24px">
+          <div class="h-kicker">Welcome to the workshop</div>
+          <h1>You do not need more tabs. You need an order.</h1>
+          <p class="lede">Foundry is a single path through web, design, games, and mobile — built around the tools you already opened: Figma, Godot, Python, React, C#, and the rest.</p>
+          <div class="space"></div>
+          <div class="field">
+            <label>What should we call you?</label>
+            <input class="inp" id="name" placeholder="Your name" value="${esc(state.name)}" />
+          </div>
+          <button class="btn" data-act="ob-name">Continue</button>
+        </div>`;
+    }
+    if (step === 1) {
+      return `
+        <div class="article">
+          <div class="h-kicker">Step 2 of 3</div>
+          <h1>What can you already do without a tutorial?</h1>
+          <p class="lede">Be harsh. “I watched a video” does not count. This only moves your recommended start; nothing is locked.</p>
+          <div class="space"></div>
+          ${SKILL_CHECKS.map((s) => `
+            <button class="choice ${state.skills[s.id] ? "on" : ""}" data-act="toggle-skill" data-id="${s.id}">
+              <span>${state.skills[s.id] ? "●" : "○"}</span>
+              <span>${esc(s.label)}</span>
+            </button>`).join("")}
+          <div class="space"></div>
+          <button class="btn" data-act="ob-next" data-to="onboarding/2">Continue</button>
+        </div>`;
+    }
+    return `
+      <div class="article">
+        <div class="h-kicker">Step 3 of 3</div>
+        <h1>How long is a sitting?</h1>
+        <p class="lede">Home will aim at about this much. You can always do more.</p>
+        ${[20, 45, 90].map((m) => `
+          <button class="choice ${state.minutes === m ? "on" : ""}" data-act="set-min" data-n="${m}">
+            <span>${state.minutes === m ? "●" : "○"}</span>
+            <span>${m} minutes</span>
+          </button>`).join("")}
+        <div class="space"></div>
+        <button class="btn" data-act="ob-finish">Enter the Foundry</button>
+      </div>`;
+  }
+
+  function suggestedStart() {
+    const s = state.skills || {};
+    if (!s.html) return "html-skeleton";
+    if (!s.css) return "css-box";
+    if (!s.js) return "js-dom";
+    if (!s.react) return "modern-js";
+    if (!s.python) return "backend-role";
+    if (!s.godot) return "game-loop";
+    return nextLesson()?.id || "welcome";
+  }
+
+  function viewToday() {
+    const nxt = nextLesson();
+    const due = dueCards();
+    const pct = Math.round((completedCount() / LESSONS.length) * 100);
+    const greet = (() => {
+      const h = new Date().getHours();
+      if (h < 12) return "Good morning";
+      if (h < 18) return "Good afternoon";
+      return "Good evening";
+    })();
+    return `
+      <div class="h-kicker">${greet}${state.name ? ", " + esc(state.name) : ""}</div>
+      <h1>One thing. Then stop if you want.</h1>
+      <p class="lede">Jumping between Godot, React, and Figma is how weeks disappear. Home will not offer a buffet.</p>
+      <div class="space"></div>
+      <div class="grid-2">
+        <div class="card gold">
+          ${due.length ? `
+            <div class="h-kicker">Due now</div>
+            <h2>${due.length} review${due.length > 1 ? "s" : ""} waiting</h2>
+            <p class="muted" style="margin:8px 0 14px">Spaced repetition — the boring superpower against forgetting.</p>
+            <a class="btn" href="#/review">Start reviews</a>
+          ` : nxt ? `
+            <div class="h-kicker">Next on the spine</div>
+            <h2>${esc(nxt.title)}</h2>
+            <p class="muted" style="margin:8px 0 14px">${esc(nxt.why)} · ${nxt.mins} min · ${TRACK_META[nxt.track]?.label || ""}</p>
+            <a class="btn" href="#/lesson/${nxt.id}">Open lesson</a>
+          ` : `
+            <div class="h-kicker">Spine complete</div>
+            <h2>The path is done. Make things.</h2>
+            <p class="muted" style="margin:8px 0 14px">Projects are the real course. Reviews will still return.</p>
+            <a class="btn" href="#/projects">Open projects</a>
+          `}
+        </div>
+        <div>
+          <div class="card stat">
+            <div class="n">${state.streak.count} day${state.streak.count === 1 ? "" : "s"}</div>
+            <div class="l">Streak ${state.streak.last === todayStr() ? "· logged today" : "· do a lesson to log today"}</div>
+          </div>
+          <div class="space"></div>
+          <div class="card stat">
+            <div class="n">${pct}%</div>
+            <div class="l">${completedCount()} / ${LESSONS.length} lessons</div>
+            <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="space-lg"></div>
+      <h3 style="margin-bottom:10px">Keep on the desk</h3>
+      <div class="grid-3">
+        <a class="card" href="#/practice">
+          <div class="h-kicker">Lab</div>
+          <strong>Playground</strong>
+          <p class="muted" style="margin-top:6px">HTML / CSS / JS, plus Python when you are online.</p>
+        </a>
+        <a class="card" href="#/rosetta">
+          <div class="h-kicker">Transfer</div>
+          <strong>Rosetta</strong>
+          <p class="muted" style="margin-top:6px">The same idea in JS, Python, GDScript, C#.</p>
+        </a>
+        <a class="card" href="#/projects">
+          <div class="h-kicker">Make</div>
+          <strong>Projects</strong>
+          <p class="muted" style="margin-top:6px">Where tutorials stop and a portfolio starts.</p>
+        </a>
+      </div>
+    `;
+  }
+
+  function viewPath() {
+    const q = (route().extra || "").toLowerCase();
+    const phases = PHASES.map((p) => {
+      const prog = phaseProgress(p.id);
+      const lessons = LESSONS.filter((l) => l.phase === p.id);
+      const allDone = prog.d === prog.t && prog.t > 0;
+      const hasCurrent = lessons.some((l) => l.id === nextLesson()?.id);
+      return `
+        <section class="phase">
+          <div class="phase-head">
+            <div class="dot ${allDone ? "done" : hasCurrent ? "now" : ""}"></div>
+            <div style="flex:1">
+              <div class="h-kicker">Phase ${p.n} · ${prog.d}/${prog.t}</div>
+              <h2>${esc(p.title)}</h2>
+              <p class="muted">${esc(p.blurb)}</p>
+              <div class="bar" style="margin-top:10px;max-width:280px"><i style="width:${prog.pct}%"></i></div>
+            </div>
+          </div>
+          <div class="lesson-list">
+            ${lessons.map((l) => {
+              const done = !!state.completed[l.id];
+              const current = nextLesson()?.id === l.id;
+              return `
+                <a class="lesson-row ${done ? "done" : ""} ${current ? "current" : ""}" href="#/lesson/${l.id}">
+                  <span class="check">${done ? "✓" : ""}</span>
+                  <span>
+                    <strong>${esc(l.title)}</strong>
+                    <div class="muted" style="font-size:12px">${TRACK_META[l.track]?.label || ""} ${l.lab ? "· lab" : ""}</div>
+                  </span>
+                  <span class="mins">${l.mins}m</span>
+                </a>`;
+            }).join("")}
+          </div>
+        </section>`;
+    }).join("");
+    return `
+      <div class="topbar">
+        <div>
+          <div class="h-kicker">The spine</div>
+          <h1>Do not rearrange this because you are bored.</h1>
+        </div>
+      </div>
+      <p class="lede">Peek anywhere. Home still recommends the next incomplete lesson. Side quests (Rosetta, Playground, Figma files) are extra, not instead.</p>
+      <div class="space"></div>
+      ${phases}
+    `;
+  }
+
+  function viewLesson(id) {
+    const l = lessonById(id);
+    if (!l) return `<p>Unknown lesson.</p><a href="#/path">Back to path</a>`;
+    const idx = LESSONS.findIndex((x) => x.id === id);
+    const prev = LESSONS[idx - 1];
+    const next = LESSONS[idx + 1];
+    const done = !!state.completed[id];
+    const jumped = nextLesson() && nextLesson().id !== id && !done && idx > LESSONS.findIndex((x) => x.id === nextLesson().id);
+    return `
+      <div class="article">
+        <a href="#/path" class="muted">← Path</a>
+        <div class="h-kicker" style="margin-top:12px">${TRACK_META[l.track]?.label || ""} · ${l.mins} min · phase ${l.phase}</div>
+        <h1>${esc(l.title)}</h1>
+        <p class="lede">${esc(l.why)}</p>
+        ${jumped ? `<div class="callout warn">You skipped ahead of the spine. Fine — but if you feel lost, go back to <a href="#/today">Today</a>.</div>` : ""}
+        <hr class="sep" />
+        ${l.html}
+        ${l.lab ? renderLab(l) : ""}
+        <hr class="sep" />
+        <h3>Check</h3>
+        <p class="muted">Answer before you mark it done. Wrong answers still teach — read the note.</p>
+        <div id="quiz">${(l.quiz || []).map((q, i) => renderQuiz(l.id, i, q)).join("")}</div>
+        <div class="field">
+          <label>Note to future you (optional)</label>
+          <textarea class="inp" rows="3" data-act="note" data-id="${l.id}" placeholder="What clicked, what is still foggy…">${esc(state.notes[l.id] || "")}</textarea>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" data-act="complete" data-id="${l.id}">${done ? "Completed ✓" : "Mark complete"}</button>
+          ${next ? `<a class="btn ghost" href="#/lesson/${next.id}">Next: ${esc(next.title)}</a>` : `<a class="btn ghost" href="#/projects">Projects</a>`}
+        </div>
+        <div class="muted" style="margin-top:10px;font-size:12px">${prev ? `Previous: ${esc(prev.title)}` : "Start of the spine"}</div>
+      </div>`;
+  }
+
+  function renderQuiz(lid, i, q) {
+    return `
+      <div class="card q-card" data-quiz="${lid}:${i}">
+        <strong>${esc(q.q)}</strong>
+        ${q.options.map((opt, j) => `
+          <button class="opt" data-act="quiz" data-lid="${lid}" data-qi="${i}" data-j="${j}">${esc(opt)}</button>
+        `).join("")}
+        <p class="why muted hidden" style="margin-top:8px"></p>
+      </div>`;
+  }
+
+  function renderLab(l) {
+    const lab = l.lab;
+    if (lab.type === "checklist") {
+      return `
+        <h3>Do it for real</h3>
+        <p class="muted">${esc(lab.prompt)}</p>
+        ${(lab.items || []).map((item, i) => {
+          const k = l.id + ":c:" + i;
+          return `<label class="milestone"><input type="checkbox" data-act="lab-check" data-k="${k}" ${state.labDone[k] ? "checked" : ""} /> <span>${esc(item)}</span></label>`;
+        }).join("")}`;
+    }
+    if (lab.type === "js") {
+      return `
+        <h3>Lab</h3>
+        <p class="muted">${esc(lab.prompt)}</p>
+        <textarea class="editor" id="lab-code">${esc(lab.starter)}</textarea>
+        <div class="row" style="margin:10px 0">
+          <button class="btn tiny" data-act="run-js-lab" data-id="${l.id}">Run tests</button>
+        </div>
+        <pre class="out" id="lab-out">Output will land here.</pre>`;
+    }
+    if (lab.type === "html") {
+      return `
+        <h3>Lab</h3>
+        <p class="muted">${esc(lab.prompt)} Use the playground below. There are no unit tests for layout — your eyes are the tests.</p>
+        <p><a class="btn tiny" href="#/playground/${l.id}">Open in Playground</a></p>`;
+    }
+    return "";
+  }
+
+  function viewPractice() {
+    const due = dueCards().length;
+    return `
+      <div class="h-kicker">Practice</div>
+      <h1>Drill, don’t wander.</h1>
+      <p class="lede">Reviews first if any are due. Then the lab. Rosetta when languages start to blur.</p>
+      <div class="space"></div>
+      <div class="grid-3">
+        <a class="card gold" href="#/review">
+          <div class="h-kicker">SRS</div>
+          <h2>${due ? due + " due" : "Caught up"}</h2>
+          <p class="muted">Flashcards from completed lessons.</p>
+        </a>
+        <a class="card" href="#/playground">
+          <div class="h-kicker">Lab</div>
+          <h2>Playground</h2>
+          <p class="muted">HTML, CSS, JS, Python.</p>
+        </a>
+        <a class="card" href="#/rosetta">
+          <div class="h-kicker">Transfer</div>
+          <h2>Rosetta</h2>
+          <p class="muted">Four languages, one idea.</p>
+        </a>
+      </div>
+    `;
+  }
+
+  function viewReview() {
+    const due = dueCards();
+    if (!due.length) {
+      const total = Object.keys(state.srs).length;
+      return `
+        <div class="h-kicker">Reviews</div>
+        <h1>${total ? "Nothing due. Go make something." : "Complete a lesson to mint cards."}</h1>
+        <p class="lede">Cards are created when you mark a lesson complete.</p>
+        <div class="space"></div>
+        <a class="btn" href="#/today">Today</a>`;
+    }
+    const card = due[0];
+    return `
+      <div class="h-kicker">Reviews · ${due.length} left</div>
+      <h1>Can you still say it?</h1>
+      <div class="space"></div>
+      <div class="card flip" id="flip" data-act="flip">
+        <div class="front" id="flip-front">${esc(card.f)}</div>
+        <div class="back hidden" id="flip-back">${esc(card.b)}</div>
+      </div>
+      <p class="muted" style="margin:10px 0 16px;text-align:center">Tap the card, then grade yourself honestly.</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn ghost tiny" data-act="grade" data-id="${card.id}" data-q="1">Again</button>
+        <button class="btn ghost tiny" data-act="grade" data-id="${card.id}" data-q="3">Hard</button>
+        <button class="btn tiny" data-act="grade" data-id="${card.id}" data-q="4">Good</button>
+        <button class="btn tiny" data-act="grade" data-id="${card.id}" data-q="5">Easy</button>
+      </div>`;
+  }
+
+  const PG_HTML = "<h1>Hello, Foundry</h1>\n<p>Edit me.</p>\n<button id='b'>Click</button>";
+  const PG_CSS = "body { font-family: Georgia, serif; padding: 24px; background: #111; color: #eee; }\nbutton { padding: 8px 14px; }";
+  const PG_JS = "document.getElementById('b').onclick = function () {\n  document.querySelector('h1').textContent = 'Clicked.';\n};";
+  const PG_PY = "def greet(name):\n    return 'Hello, ' + name\n\nprint(greet('Foundry'))\nprint([n*n for n in range(5)])";
+
+  function viewPlayground() {
+    const pg = state.playground || {};
+    const tab = pg.tab || "web";
+    const labId = route().id;
+    let htmlVal = pg.html || PG_HTML;
+    let cssVal = pg.css || PG_CSS;
+    let jsVal = pg.js || PG_JS;
+    let labNote = "";
+    if (labId) {
+      const les = lessonById(labId);
+      if (les && les.lab && les.lab.type === "html") {
+        htmlVal = les.lab.starterHtml || htmlVal;
+        cssVal = les.lab.starterCss || cssVal;
+        jsVal = les.lab.starterJs || jsVal;
+        labNote = "<p class='callout'>Lab from <strong>" + esc(les.title) + "</strong>: " + esc(les.lab.prompt) + "</p>";
+      }
+    }
+    return `
+      <div class="h-kicker">Playground</div>
+      <h1>Try it here.</h1>
+      <p class="lede">Web lab runs entirely in this tab. Python loads Pyodide from the network the first time.</p>
+      ${labNote}
+      <div class="space"></div>
+      <div class="tabs">
+        <button class="tab ${tab === "web" ? "on" : ""}" data-act="pg-tab" data-tab="web">HTML / CSS / JS</button>
+        <button class="tab ${tab === "py" ? "on" : ""}" data-act="pg-tab" data-tab="py">Python</button>
+      </div>
+      <div class="space"></div>
+      ${tab === "web" ? `
+        <div class="play web">
+          <div>
+            <div class="tabs" style="margin-bottom:8px">
+              <button class="tab on" id="edtab-html" data-act="ed-tab" data-ed="html">HTML</button>
+              <button class="tab" id="edtab-css" data-act="ed-tab" data-ed="css">CSS</button>
+              <button class="tab" id="edtab-js" data-act="ed-tab" data-ed="js">JS</button>
+            </div>
+            <textarea class="editor" id="ed-html" style="min-height:220px">${esc(htmlVal)}</textarea>
+            <textarea class="editor hidden" id="ed-css" style="min-height:220px">${esc(cssVal)}</textarea>
+            <textarea class="editor hidden" id="ed-js" style="min-height:220px">${esc(jsVal)}</textarea>
+            <div class="row" style="margin-top:8px">
+              <button class="btn tiny" data-act="run-web">Run</button>
+            </div>
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:6px">Preview</div>
+            <div class="preview"><iframe id="pv" sandbox="allow-scripts"></iframe></div>
+          </div>
+        </div>
+      ` : `
+        <textarea class="editor" id="ed-py" style="min-height:240px">${esc(pg.py || PG_PY)}</textarea>
+        <div class="row" style="margin:10px 0">
+          <button class="btn tiny" data-act="run-py">Run Python</button>
+        </div>
+        <pre class="out" id="py-out">First run downloads Pyodide (~10MB). Stay on the tab.</pre>
+      `}
+    `;
+  }
+
+  function viewRosetta() {
+    return `
+      <div class="h-kicker">Rosetta</div>
+      <h1>Same idea, four spellings.</h1>
+      <p class="lede">When languages blur, come here instead of starting a new beginner course.</p>
+      <div class="space"></div>
+      ${ROSETTA.map((r) => `
+        <div class="card" style="margin-bottom:10px">
+          <h3>${esc(r.idea)}</h3>
+          <div class="rosetta">
+            <div class="cell"><h4>JavaScript</h4><pre>${esc(r.js)}</pre></div>
+            <div class="cell"><h4>Python</h4><pre>${esc(r.py)}</pre></div>
+            <div class="cell"><h4>GDScript</h4><pre>${esc(r.gd)}</pre></div>
+            <div class="cell"><h4>C#</h4><pre>${esc(r.cs)}</pre></div>
+          </div>
+        </div>`).join("")}
+    `;
+  }
+
+  function viewProjects() {
+    return `
+      <div class="h-kicker">Make</div>
+      <h1>Projects are the course.</h1>
+      <p class="lede">Each one sits after a phase. You may start early; the milestones will tell you what you are missing.</p>
+      <div class="space"></div>
+      ${PROJECTS.map((p) => {
+        const checks = state.projectChecks[p.id] || {};
+        const n = p.milestones.length;
+        const d = p.milestones.filter((_, i) => checks[i]).length;
+        const done = !!state.projectDone[p.id];
+        return `
+          <a class="card" href="#/project/${p.id}" style="display:block;margin-bottom:10px;color:inherit">
+            <div class="row" style="justify-content:space-between">
+              <div class="h-kicker">${esc(p.phase)} · ${p.mins} min</div>
+              <span class="chip">${done ? "shipped" : d + "/" + n}</span>
+            </div>
+            <h2 style="margin:6px 0">${esc(p.title)}</h2>
+            <p class="muted">${esc(p.blurb)}</p>
+            <div class="bar" style="margin-top:12px"><i style="width:${Math.round((d / n) * 100)}%"></i></div>
+          </a>`;
+      }).join("")}
+    `;
+  }
+
+  function viewProject(id) {
+    const p = PROJECTS.find((x) => x.id === id);
+    if (!p) return `<p>Missing project.</p>`;
+    const checks = state.projectChecks[p.id] || {};
+    const d = p.milestones.filter((_, i) => checks[i]).length;
+    return `
+      <a class="muted" href="#/projects">← Projects</a>
+      <div class="h-kicker" style="margin-top:12px">${esc(p.phase)} · ~${p.mins} min</div>
+      <h1>${esc(p.title)}</h1>
+      <p class="lede">${esc(p.blurb)}</p>
+      <div class="row" style="margin:12px 0">${p.skills.map((s) => `<span class="chip">${esc(s)}</span>`).join("")}</div>
+      <div class="bar"><i style="width:${Math.round((d / p.milestones.length) * 100)}%"></i></div>
+      <div class="space"></div>
+      <h3>Milestones</h3>
+      ${p.milestones.map((m, i) => `
+        <label class="milestone">
+          <input type="checkbox" data-act="ms" data-pid="${p.id}" data-i="${i}" ${checks[i] ? "checked" : ""} />
+          <span>${esc(m)}</span>
+        </label>`).join("")}
+      <div class="space"></div>
+      <button class="btn" data-act="ship" data-id="${p.id}">${state.projectDone[p.id] ? "Shipped ✓" : "Mark shipped"}</button>
+    `;
+  }
+
+  function viewYou() {
+    const pct = Math.round((completedCount() / LESSONS.length) * 100);
+    return `
+      <div class="h-kicker">Profile</div>
+      <h1>${esc(state.name || "Maker")}</h1>
+      <p class="lede">Progress lives in this browser. Export a backup before you clear site data.</p>
+      <div class="space"></div>
+      <div class="grid-3">
+        <div class="card stat"><div class="n">${completedCount()}</div><div class="l">Lessons</div></div>
+        <div class="card stat"><div class="n">${state.streak.count}</div><div class="l">Day streak</div></div>
+        <div class="card stat"><div class="n">${state.xp}</div><div class="l">XP</div></div>
+      </div>
+      <div class="space"></div>
+      <div class="card">
+        <div class="h-kicker">Path</div>
+        <div class="bar" style="margin:10px 0"><i style="width:${pct}%"></i></div>
+        <p class="muted">${pct}% of the spine</p>
+      </div>
+      <div class="space"></div>
+      <h3>Install on your phone or desktop</h3>
+      <p class="muted" style="margin:8px 0 12px">This must be opened from the live preview or a local server — not as a raw file. Chrome / Edge: the install icon in the address bar, or ⋮ → Install app. Android Chrome: ⋮ → Install app / Add to Home screen. iPhone: Safari only → Share → Add to Home Screen.</p>
+      <div class="row">
+        <button class="btn tiny" data-act="install">Install / icon</button>
+        <button class="btn ghost tiny" data-act="export">Export progress</button>
+        <label class="btn ghost tiny">Import<input type="file" accept="application/json" class="hidden" id="imp"></label>
+      </div>
+      <div class="space-lg"></div>
+      <h3>Settings</h3>
+      <div class="field">
+        <label>Name</label>
+        <input class="inp" data-act="set-name" value="${esc(state.name)}" />
+      </div>
+      <div class="field">
+        <label>Sitting length</label>
+        <select class="inp" data-act="set-min-sel">
+          ${[20, 45, 90].map((m) => `<option ${state.minutes === m ? "selected" : ""}>${m}</option>`).join("")}
+        </select>
+      </div>
+      <button class="btn warn tiny" data-act="reset">Reset all progress</button>
+    `;
+  }
+
+  function render() {
+    if (!state.onboarded && route().name !== "onboarding") {
+      currentPath = "onboarding/0";
+    }
+    const r = route();
+    let html = "";
+    let active = r.name;
+    if (r.name === "onboarding") html = viewOnboarding();
+    else if (r.name === "today" || r.name === "") { html = shell("today", viewToday()); }
+    else if (r.name === "path") { html = shell("path", viewPath()); }
+    else if (r.name === "lesson") { html = shell("path", viewLesson(r.id)); active = "path"; }
+    else if (r.name === "practice") { html = shell("practice", viewPractice()); }
+    else if (r.name === "review") { html = shell("practice", viewReview()); active = "practice"; }
+    else if (r.name === "playground") { html = shell("practice", viewPlayground()); active = "practice"; }
+    else if (r.name === "rosetta") { html = shell("practice", viewRosetta()); active = "practice"; }
+    else if (r.name === "projects") { html = shell("projects", viewProjects()); }
+    else if (r.name === "project") { html = shell("projects", viewProject(r.id)); active = "projects"; }
+    else if (r.name === "you") { html = shell("you", viewYou()); }
+    else html = shell("today", viewToday());
+    $app.innerHTML = html;
+    bindAfter();
+  }
+
+  let pyodidePromise = null;
+  async function getPyodide() {
+    if (window.loadPyodide) {
+      if (!pyodidePromise) pyodidePromise = window.loadPyodide({ stdout: () => {}, stderr: () => {} });
+      return pyodidePromise;
+    }
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js";
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("Could not load Pyodide. Need network."));
+      document.head.appendChild(s);
+    });
+    pyodidePromise = window.loadPyodide();
+    return pyodidePromise;
+  }
+
+  function capturePlayground() {
+    const html = document.getElementById("ed-html");
+    const css = document.getElementById("ed-css");
+    const js = document.getElementById("ed-js");
+    const py = document.getElementById("ed-py");
+    if (html) state.playground.html = html.value;
+    if (css) state.playground.css = css.value;
+    if (js) state.playground.js = js.value;
+    if (py) state.playground.py = py.value;
+  }
+  function runWebPreview() {
+    capturePlayground();
+    const html = state.playground.html || "";
+    const css = state.playground.css || "";
+    const js = state.playground.js || "";
+    save();
+    const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body>${html}<script>${js.replace(/<\/script/gi, "<\\/script")}<\/script></body></html>`;
+    const iframe = document.getElementById("pv");
+    if (iframe) iframe.srcdoc = doc;
+  }
+
+  function bindAfter() {
+    const r = route();
+    if (r.name === "playground" && (state.playground.tab || "web") === "web") {
+      runWebPreview();
+    }
+    const imp = document.getElementById("imp");
+    if (imp) {
+      imp.addEventListener("change", async (e) => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        try {
+          const data = JSON.parse(await f.text());
+          state = Object.assign(defaultState(), data);
+          save();
+          toast("Imported.");
+          render();
+        } catch { toast("Could not import that file."); }
+      });
+    }
+    $app.querySelectorAll("textarea[data-act=note]").forEach((el) => {
+      el.addEventListener("change", () => {
+        state.notes[el.getAttribute("data-id")] = el.value;
+        save();
+      });
+    });
+    $app.querySelectorAll("input[data-act=set-name]").forEach((el) => {
+      el.addEventListener("change", () => { state.name = el.value.trim(); save(); });
+    });
+    $app.querySelectorAll("select[data-act=set-min-sel]").forEach((el) => {
+      el.addEventListener("change", () => { state.minutes = Number(el.value); save(); });
+    });
+  }
+
+  $app.addEventListener("click", async (e) => {
+    const link = e.target.closest("a[href^='#/']");
+    if (link && !e.target.closest("[data-act]")) {
+      e.preventDefault();
+      go(link.getAttribute("href"));
+      return;
+    }
+    const t = e.target.closest("[data-act]");
+    if (!t) return;
+    const act = t.getAttribute("data-act");
+
+    if (act === "ob-name") {
+      state.name = document.getElementById("name")?.value.trim() || "maker";
+      save(); go("onboarding/1"); return;
+    }
+    if (act === "toggle-skill") {
+      const id = t.getAttribute("data-id");
+      state.skills[id] = !state.skills[id];
+      save(); render(); return;
+    }
+    if (act === "ob-next") { go(t.getAttribute("data-to")); return; }
+    if (act === "set-min") { state.minutes = Number(t.getAttribute("data-n")); save(); render(); return; }
+    if (act === "ob-finish") {
+      state.onboarded = true;
+      save();
+      go("today");
+      toast("Spine is ready. Do the next lesson.");
+      return;
+    }
+    if (act === "complete") {
+      completeLesson(t.getAttribute("data-id"));
+      toast("Logged. Cards queued.");
+      render();
+      return;
+    }
+    if (act === "quiz") {
+      const lid = t.getAttribute("data-lid");
+      const qi = Number(t.getAttribute("data-qi"));
+      const j = Number(t.getAttribute("data-j"));
+      const q = lessonById(lid).quiz[qi];
+      const card = t.closest("[data-quiz]");
+      card.querySelectorAll(".opt").forEach((o, idx) => {
+        o.classList.remove("good", "bad");
+        if (idx === q.a) o.classList.add("good");
+        if (idx === j && j !== q.a) o.classList.add("bad");
+      });
+      const why = card.querySelector(".why");
+      why.textContent = (j === q.a ? "Yes. " : "Not quite. ") + q.why;
+      why.classList.remove("hidden");
+      return;
+    }
+    if (act === "lab-check") {
+      const k = t.getAttribute("data-k");
+      state.labDone[k] = t.checked;
+      if (t.checked) bumpStreak();
+      save();
+      return;
+    }
+    if (act === "run-js-lab") {
+      const les = lessonById(t.getAttribute("data-id"));
+      const code = document.getElementById("lab-code").value;
+      const out = document.getElementById("lab-out");
+      try {
+        const fn = new Function("assert", code + "\n" + les.lab.tests);
+        fn((cond, msg) => { if (!cond) throw new Error(msg || "Assertion failed"); });
+        out.textContent = "All checks passed.";
+        bumpStreak(); save();
+      } catch (err) {
+        out.textContent = "Failed: " + err.message;
+      }
+      return;
+    }
+    if (act === "flip") {
+      document.getElementById("flip-front")?.classList.toggle("hidden");
+      document.getElementById("flip-back")?.classList.toggle("hidden");
+      return;
+    }
+    if (act === "grade") {
+      reviewCard(t.getAttribute("data-id"), Number(t.getAttribute("data-q")));
+      render();
+      return;
+    }
+    if (act === "pg-tab") {
+      capturePlayground();
+      state.playground.tab = t.getAttribute("data-tab");
+      save(); render(); return;
+    }
+    if (act === "ed-tab") {
+      const ed = t.getAttribute("data-ed");
+      ["html", "css", "js"].forEach((k) => {
+        document.getElementById("ed-" + k)?.classList.toggle("hidden", k !== ed);
+        document.getElementById("edtab-" + k)?.classList.toggle("on", k === ed);
+      });
+      return;
+    }
+    if (act === "run-web") { runWebPreview(); return; }
+    if (act === "run-py") {
+      const out = document.getElementById("py-out");
+      const code = document.getElementById("ed-py").value;
+      state.playground.py = code; save();
+      out.textContent = "Loading Python…";
+      try {
+        const py = await getPyodide();
+        let buf = "";
+        py.setStdout({ batched: (s) => { buf += s + "\n"; } });
+        py.setStderr({ batched: (s) => { buf += s + "\n"; } });
+        const result = await py.runPythonAsync(code);
+        out.textContent = (buf || "") + (result == null ? "" : String(result));
+        bumpStreak(); save();
+      } catch (err) {
+        out.textContent = String(err.message || err);
+      }
+      return;
+    }
+    if (act === "ms") {
+      const pid = t.getAttribute("data-pid");
+      const i = t.getAttribute("data-i");
+      state.projectChecks[pid] = state.projectChecks[pid] || {};
+      state.projectChecks[pid][i] = t.checked;
+      if (t.checked) bumpStreak();
+      save(); render();
+      return;
+    }
+    if (act === "ship") {
+      const id = t.getAttribute("data-id");
+      state.projectDone[id] = Date.now();
+      state.xp += 50;
+      bumpStreak(); save(); render(); toast("Shipped.");
+      return;
+    }
+    if (act === "export") {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "foundry-progress.json";
+      a.click();
+      return;
+    }
+    if (act === "reset") {
+      if (confirm("Reset all Foundry progress on this device?")) {
+        state = defaultState();
+        save(); go("onboarding/0"); toast("Cleared.");
+      }
+      return;
+    }
+    if (act === "install") {
+      registerPWA(true);
+      toast("Use your browser’s Install / Add to Home Screen.");
+      return;
+    }
+  });
+
+  function registerPWA(verbose) {
+    if (!("serviceWorker" in navigator) || location.protocol === "file:") {
+      if (verbose) toast("Open Foundry via a local server or HTTPS to install. file:// cannot be installed.");
+      return;
+    }
+    navigator.serviceWorker.register("./sw.js").catch(function () {});
+    if (verbose) {
+      if (window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        window.deferredPrompt.userChoice.finally(function () { window.deferredPrompt = null; });
+      } else {
+        toast("Use your browser menu: Install app, or iPhone Share → Add to Home Screen.");
+      }
+    }
+  }
+
+  function makeIcon() {
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 512;
+    const g = c.getContext("2d");
+    g.fillStyle = "#171614";
+    round(g, 0, 0, 512, 512, 96); g.fill();
+    g.fillStyle = "#e4b34a";
+    g.font = "320px Georgia, serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText("F", 256, 280);
+    return c.toDataURL("image/png");
+  }
+  function round(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+  });
+  window.addEventListener("hashchange", () => { capturePlayground(); save(); render(); });
+
+  try {
+    load();
+    var hashPath = "";
+    try { hashPath = (location.hash || "").replace(/^#\/?/, ""); } catch (e) {}
+    if (state.onboarded) currentPath = hashPath || "today";
+    else currentPath = "onboarding/0";
+    render();
+    try { registerPWA(false); } catch (e) {}
+  } catch (err) {
+    $app.innerHTML = "<pre style=\"color:#e8b4a8;padding:24px;white-space:pre-wrap;font-family:ui-monospace,monospace\">Foundry failed to start:\n\n" +
+      String(err && (err.stack || err.message) || err) + "</pre>";
+  }
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
